@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Aumentar el límite de tiempo en Vercel (Puppeteer tarda en arrancar)
+export const maxDuration = 60;
+
 // Inicializar Firebase Admin (Patrón Singleton para entornos Serverless)
 function getDb() {
   if (getApps().length === 0) {

@@ -46,11 +46,17 @@ export default async function handler(request, response) {
     // Crear un ID único o usar el email como ID
     const userRef = db.collection('users_subscriptions').doc(email.toLowerCase());
     
+    // Verificar si ya existe
+    const doc = await userRef.get();
+    if (doc.exists) {
+      return response.status(409).json({ error: 'Este correo ya se encuentra suscrito en el sistema.' });
+    }
+
     await userRef.set({
       email: email.toLowerCase(),
       provincia: provincia.toLowerCase(),
       created_at: FieldValue.serverTimestamp()
-    }, { merge: true }); // Si ya existe, actualiza la provincia sin perder datos
+    }); // No usamos merge porque sabemos que es nuevo
 
     // Enviar correo de bienvenida
     await sendWelcomeEmail(email.toLowerCase(), provincia.toLowerCase());

@@ -47,7 +47,8 @@ function App() {
             setProvincia('');
           }, 4000);
         } else {
-          alert('Hubo un error al suscribirte. Intenta nuevamente.');
+          const errorData = await response.json().catch(() => ({}));
+          alert(errorData.error || 'Hubo un error al suscribirte. Intenta nuevamente.');
         }
       } catch (error) {
         console.error('Error:', error);

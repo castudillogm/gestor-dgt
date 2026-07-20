@@ -1,4 +1,5 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { sendAlertEmail } from './utils/mailer.js';
 import { obtenerIncidenciasReales } from './utils/robot-dgt.js';
 import dotenv from 'dotenv';
@@ -7,7 +8,7 @@ dotenv.config();
 
 // Inicializar Firebase Admin (Patrón Singleton para entornos Serverless)
 function getDb() {
-  if (!admin.apps.length) {
+  if (getApps().length === 0) {
     try {
       let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
       // Limpiar comillas si Vercel las guardó por error
@@ -16,8 +17,8 @@ function getDb() {
       }
       privateKey = privateKey.replace(/\\n/g, '\n');
 
-      admin.initializeApp({
-        credential: admin.credential.cert({
+      initializeApp({
+        credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
           privateKey: privateKey,
@@ -27,7 +28,7 @@ function getDb() {
       console.error('Firebase initialization error', error);
     }
   }
-  return admin.firestore();
+  return getFirestore();
 }
 
 export default async function handler(request, response) {
@@ -80,7 +81,7 @@ export default async function handler(request, response) {
 
         // 5. Marcar la incidencia como procesada en Firestore
         await incRef.set({
-          procesada_en: admin.firestore.FieldValue.serverTimestamp(),
+          procesada_en: FieldValue.serverTimestamp(),
           provincia: incidencia.provincia
         });
       }

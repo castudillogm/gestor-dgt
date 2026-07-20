@@ -1,11 +1,12 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 // Inicializar Firebase Admin
 function getDb() {
-  if (!admin.apps.length) {
+  if (getApps().length === 0) {
     try {
       let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
       if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
@@ -13,8 +14,8 @@ function getDb() {
       }
       privateKey = privateKey.replace(/\\n/g, '\n');
 
-      admin.initializeApp({
-        credential: admin.credential.cert({
+      initializeApp({
+        credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
           privateKey: privateKey,
@@ -24,7 +25,7 @@ function getDb() {
       console.error('Firebase initialization error', error);
     }
   }
-  return admin.firestore();
+  return getFirestore();
 }
 
 export default async function handler(request, response) {
@@ -47,7 +48,7 @@ export default async function handler(request, response) {
     await userRef.set({
       email: email.toLowerCase(),
       provincia: provincia.toLowerCase(),
-      created_at: admin.firestore.FieldValue.serverTimestamp()
+      created_at: FieldValue.serverTimestamp()
     }, { merge: true }); // Si ya existe, actualiza la provincia sin perder datos
 
     return response.status(200).json({ success: true, message: 'Suscrito correctamente' });

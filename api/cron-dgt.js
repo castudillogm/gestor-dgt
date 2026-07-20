@@ -63,7 +63,7 @@ export default async function handler(request, response) {
 
       if (!doc.exists) {
         // La incidencia es NUEVA
-        console.log(\`Nueva incidencia detectada: \${incidencia.id_incidencia}\`);
+        console.log(`Nueva incidencia detectada: ${incidencia.id_incidencia}`);
         
         // 3. Buscar usuarios interesados en esta provincia o en "Toda España"
         const usersSnapshot = await db.collection('users_subscriptions')

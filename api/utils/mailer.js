@@ -66,9 +66,9 @@ const generateEmailTemplate = (incidencia) => {
 export const sendAlertEmail = async (to, incidencia) => {
   try {
     const mailOptions = {
-      from: \`"Alertas GrupaMar" <\${process.env.SMTP_USER}>\`,
+      from: `"Alertas GrupaMar" <${process.env.SMTP_USER}>`,
       to,
-      subject: \`Alerta de Tráfico GrupaMar: \${incidencia.tipo} en \${incidencia.carretera} (\${incidencia.provincia})\`,
+      subject: `Alerta de Tráfico GrupaMar: ${incidencia.tipo} en ${incidencia.carretera} (${incidencia.provincia})`,
       html: generateEmailTemplate(incidencia),
     };
 

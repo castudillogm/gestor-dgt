@@ -1,5 +1,6 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { sendWelcomeEmail } from './utils/mailer.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -50,6 +51,9 @@ export default async function handler(request, response) {
       provincia: provincia.toLowerCase(),
       created_at: FieldValue.serverTimestamp()
     }, { merge: true }); // Si ya existe, actualiza la provincia sin perder datos
+
+    // Enviar correo de bienvenida
+    await sendWelcomeEmail(email.toLowerCase(), provincia.toLowerCase());
 
     return response.status(200).json({ success: true, message: 'Suscrito correctamente' });
   } catch (error) {

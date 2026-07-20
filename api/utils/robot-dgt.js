@@ -46,19 +46,31 @@ export async function obtenerIncidenciasReales() {
       // ALERTA CRÍTICA: Diseño cambiado
       console.error('🚨 [ALERTA DE SISTEMA] 🚨');
       console.error('🤖 Robot DGT: El diseño de la página web de la DGT ha cambiado drásticamente.');
-      console.error('🤖 Robot DGT: No se encontró el contenedor principal esperado. El scraper está comprometido.');
-      console.error('🤖 Acción Requerida: Actualizar los selectores CSS en api/utils/robot-dgt.js');
+      console.error('🤖 Robot DGT: Procediendo a usar API de Euskadi como Fallback...');
       
-      // Retornar fallback (datos vacíos o mock) para no romper el front
-      return [{
-        id_incidencia: 'ALERTA-DGT',
-        tipo: 'OTROS',
-        carretera: 'SISTEMA',
-        provincia: 'CENTRAL',
-        tramo: { km_inicio: 0, km_fin: 0, sentido: 'Ambos' },
-        periodo: { inicio: new Date().toISOString(), fin: new Date().toISOString() },
-        descripcion: 'El sistema de tráfico de la DGT ha sido actualizado. Extraer datos pausado por seguridad. Avisar al administrador.'
-      }];
+      // Fallback a API de Euskadi (que usábamos originalmente)
+      const fallbackResponse = await fetch('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20');
+      if (fallbackResponse.ok) {
+        const data = await fallbackResponse.json();
+        return data.incidences.map(inc => {
+          let tipo = "OTROS";
+          const tipoOriginal = inc.incidenceType?.toUpperCase() || "";
+          if (tipoOriginal.includes("OBRA")) tipo = "OBRAS";
+          if (tipoOriginal.includes("METEO") || tipoOriginal.includes("HIELO") || tipoOriginal.includes("NIEVE")) tipo = "CORTE_CLIMATICO";
+          if (tipoOriginal.includes("ACCIDENTE")) tipo = "ACCIDENTE";
+          
+          return {
+            id_incidencia: `TRF-${inc.incidenceId || Date.now()}`,
+            tipo,
+            carretera: inc.road || "Vía Desconocida",
+            provincia: inc.province || "N/A",
+            tramo: { km_inicio: inc.pkStart || 0, km_fin: inc.pkEnd || 0, sentido: inc.direction || "Ambos" },
+            periodo: { inicio: inc.startDate || new Date().toISOString(), fin: inc.endDate || new Date(Date.now() + 86400000).toISOString() },
+            descripcion: `${inc.cause || 'Incidencia de tráfico'} en ${inc.cityTown || inc.province}. Nivel: ${inc.incidenceLevel}. (Datos vía Fallback Euskadi)`
+          };
+        });
+      }
+      return [];
     }
 
     console.log('🤖 Robot DGT: Estructura validada correctamente. Procediendo a extraer datos...');

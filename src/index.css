@@ -1,0 +1,177 @@
+:root {
+  /* GrupaMar Brand Colors */
+  --color-primary: #091197; /* Azul Oscuro */
+  --color-secondary: #03A9EC; /* Azul Claro */
+  --color-accent: #F75600; /* Naranja */
+  --color-background: #FFFFFF; /* Blanco */
+  --color-surface: #F6F6F6; /* Gris Claro */
+  
+  --color-text-main: #1a1a2e;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #FFFFFF;
+  
+  --radius-lg: 30px;
+  --radius-md: 15px;
+  --radius-sm: 8px;
+  
+  --shadow-sm: 0 4px 6px -1px rgba(9, 17, 151, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(9, 17, 151, 0.08);
+  --shadow-lg: 0 20px 25px -5px rgba(9, 17, 151, 0.1);
+  
+  --font-primary: 'Basier Square', 'Arial Nova', system-ui, -apple-system, sans-serif;
+  
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-primary);
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Typography Helpers */
+.title-primary {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+}
+
+.title-secondary {
+  color: var(--color-secondary);
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+/* Layout */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  border: none;
+  outline: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background-color: #070d75;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text-inverse);
+}
+
+.btn-secondary:hover {
+  background-color: #028ec7;
+  transform: translateY(-2px);
+}
+
+/* Cards */
+.card {
+  background-color: var(--color-background);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(9, 17, 151, 0.05);
+  transition: var(--transition-smooth);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  transition: var(--transition-smooth);
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  background-color: var(--color-background);
+  box-shadow: 0 0 0 4px rgba(3, 169, 236, 0.1);
+}
+
+/* Tags/Badges */
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-warning {
+  background-color: rgba(247, 86, 0, 0.1);
+  color: var(--color-accent);
+}
+
+.badge-info {
+  background-color: rgba(3, 169, 236, 0.1);
+  color: var(--color-secondary);
+}
+
+.badge-dark {
+  background-color: rgba(9, 17, 151, 0.1);
+  color: var(--color-primary);
+}

@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/vite"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron-dgt",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

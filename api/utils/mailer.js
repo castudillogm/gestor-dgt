@@ -127,9 +127,9 @@ const generateWelcomeTemplate = (provincia) => {
 export const sendWelcomeEmail = async (to, provincia) => {
   try {
     const mailOptions = {
-      from: \`"Alertas GrupaMar" <\${process.env.SMTP_USER}>\`,
+      from: `"Alertas GrupaMar" <${process.env.SMTP_USER}>`,
       to,
-      subject: \`Suscripción Confirmada: Alertas Viales GrupaMar (\${provincia.toUpperCase()})\`,
+      subject: `Suscripción Confirmada: Alertas Viales GrupaMar (${provincia.toUpperCase()})`,
       html: generateWelcomeTemplate(provincia),
     };
 

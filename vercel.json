@@ -9,11 +9,5 @@
       "src": "package.json",
       "use": "@vercel/vite"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron-dgt",
-      "schedule": "0 * * * *"
-    }
   ]
 }

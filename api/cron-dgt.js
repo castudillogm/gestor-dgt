@@ -5,22 +5,29 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Inicializar Firebase Admin (Patrón Singleton para entornos Serverless)
-if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        // Manejar los saltos de línea escapados en la clave privada
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  } catch (error) {
-    console.error('Firebase initialization error', error.stack);
-  }
-}
+function getDb() {
+  if (!admin.apps.length) {
+    try {
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+      // Limpiar comillas si Vercel las guardó por error
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      privateKey = privateKey.replace(/\\n/g, '\n');
 
-const db = admin.firestore();
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+      });
+    } catch (error) {
+      console.error('Firebase initialization error', error);
+    }
+  }
+  return admin.firestore();
+}
 
 export default async function handler(request, response) {
   // Opcional: Proteger el endpoint con un Secret Token (útil si usamos cron-job.org)
@@ -30,6 +37,7 @@ export default async function handler(request, response) {
   }
 
   try {
+    const db = getDb();
     console.log('Iniciando sincronización con DGT...');
     
     // 1. Simulación de Fetch a la DGT (DATEX II o API JSON)

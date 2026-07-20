@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 import { sendAlertEmail } from './utils/mailer.js';
+import { obtenerIncidenciasReales } from './utils/robot-dgt.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -32,32 +33,26 @@ function getDb() {
 export default async function handler(request, response) {
   // Opcional: Proteger el endpoint con un Secret Token (útil si usamos cron-job.org)
   const authHeader = request.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== \`Bearer \${process.env.CRON_SECRET}\`) {
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return response.status(401).json({ error: 'No autorizado' });
   }
 
   try {
     const db = getDb();
-    console.log('Iniciando sincronización con DGT...');
+    console.log('Iniciando sincronización con el Robot de Consulta...');
     
-    // 1. Simulación de Fetch a la DGT (DATEX II o API JSON)
-    // En producción, aquí se haría un fetch a la URL real de la DGT
-    const mockDgtData = [
-      {
-        id_incidencia: \`DGT-\${Date.now()}\`, // ID Dinámico para forzar el trigger de prueba
-        tipo: "CORTE_CLIMATICO",
-        carretera: "A-6",
-        provincia: "Madrid", // Usamos Madrid para probar el cruce de datos
-        tramo: { km_inicio: 45.0, km_fin: 48.5, sentido: "Decreciente" },
-        periodo: { inicio: new Date().toISOString(), fin: new Date(Date.now() + 86400000).toISOString() },
-        descripcion: "Corte total por nieve severa en la calzada."
-      }
-    ];
+    // 1. Ejecutar el robot para extraer incidencias reales
+    const dgtData = await obtenerIncidenciasReales();
+    
+    if (!dgtData || dgtData.length === 0) {
+      console.log('No se encontraron incidencias activas en esta ejecución.');
+      return response.status(200).json({ success: true, message: 'Sin incidencias nuevas' });
+    }
 
     let correosEnviados = 0;
 
     // 2. Procesar cada incidencia entrante
-    for (const incidencia of mockDgtData) {
+    for (const incidencia of dgtData) {
       // Verificar si ya la procesamos (evitar SPAM)
       const incRef = db.collection('processed_incidents').doc(incidencia.id_incidencia);
       const doc = await incRef.get();

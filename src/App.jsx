@@ -1,51 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './index.css';
-
-// Mock Data from DGT
-const mockIncidencias = [
-  {
-    id_incidencia: "DGT-2026-99812",
-    tipo: "RESTRICCION_FESTIVO",
-    carretera: "A-1",
-    provincia: "Madrid",
-    tramo: { km_inicio: 12.5, km_fin: 28.0, sentido: "Decreciente" },
-    periodo: { inicio: "2026-07-25T06:00:00Z", fin: "2026-07-25T22:00:00Z" },
-    descripcion: "Restricción a vehículos de mercancías de más de 7.500 kg de MMA."
-  },
-  {
-    id_incidencia: "DGT-2026-88741",
-    tipo: "OBRAS",
-    carretera: "AP-7",
-    provincia: "Valencia",
-    tramo: { km_inicio: 340.0, km_fin: 345.5, sentido: "Ambos sentidos" },
-    periodo: { inicio: "2026-07-21T08:00:00Z", fin: "2026-07-30T18:00:00Z" },
-    descripcion: "Corte de carril derecho por obras de asfaltado. Circulación irregular."
-  },
-  {
-    id_incidencia: "DGT-2026-11234",
-    tipo: "CORTE_CLIMATICO",
-    carretera: "N-330",
-    provincia: "Huesca",
-    tramo: { km_inicio: 650.0, km_fin: 670.0, sentido: "Creciente" },
-    periodo: { inicio: "2026-07-20T10:00:00Z", fin: "2026-07-21T10:00:00Z" },
-    descripcion: "Corte total por desprendimiento en la calzada debido a tormentas recientes."
-  }
-];
 
 function App() {
   const [email, setEmail] = useState('');
   const [provincia, setProvincia] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [incidencias, setIncidencias] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubscribe = (e) => {
+  useEffect(() => {
+    const fetchIncidencias = async () => {
+      try {
+        const response = await fetch('/api/incidencias');
+        if (response.ok) {
+          const data = await response.json();
+          setIncidencias(data);
+        } else {
+          console.error("Error fetching data");
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchIncidencias();
+  }, []);
+
+  const handleSubscribe = async (e) => {
     e.preventDefault();
     if(email && provincia) {
-      setSubscribed(true);
-      setTimeout(() => {
-        setSubscribed(false);
-        setEmail('');
-        setProvincia('');
-      }, 3000);
+      try {
+        const response = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, provincia })
+        });
+        
+        if (response.ok) {
+          setSubscribed(true);
+          setTimeout(() => {
+            setSubscribed(false);
+            setEmail('');
+            setProvincia('');
+          }, 4000);
+        } else {
+          alert('Hubo un error al suscribirte. Intenta nuevamente.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión al servidor.');
+      }
     }
   };
 
@@ -116,37 +123,47 @@ function App() {
           <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', marginBottom: '2rem' }}>Incidencias Activas</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {mockIncidencias.map((incidencia) => (
-              <div key={incidencia.id_incidencia} className="card" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                  <span className={`badge ${getBadgeClass(incidencia.tipo)}`}>
-                    {incidencia.tipo.replace('_', ' ')}
-                  </span>
-                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>{incidencia.id_incidencia}</span>
-                </div>
-                
-                <h4 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--color-secondary)' }}>{incidencia.carretera}</span> - {incidencia.provincia}
-                </h4>
-                
-                <p style={{ margin: '0 0 1rem 0' }}>{incidencia.descripcion}</p>
-                
-                <div style={{ 
-                  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', 
-                  backgroundColor: 'var(--color-surface)', padding: '1rem', borderRadius: 'var(--radius-md)',
-                  fontSize: '0.9rem'
-                }}>
-                  <div>
-                    <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Tramo Afectado:</strong>
-                    Km {incidencia.tramo.km_inicio} al {incidencia.tramo.km_fin} ({incidencia.tramo.sentido})
-                  </div>
-                  <div>
-                    <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Período:</strong>
-                    {formatDate(incidencia.periodo.inicio)} - {formatDate(incidencia.periodo.fin)}
-                  </div>
-                </div>
+            {loading ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                Cargando incidencias reales en vivo...
               </div>
-            ))}
+            ) : incidencias.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                No se han detectado incidencias activas.
+              </div>
+            ) : (
+              incidencias.map((incidencia) => (
+                <div key={incidencia.id_incidencia} className="card" style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <span className={`badge ${getBadgeClass(incidencia.tipo)}`}>
+                      {incidencia.tipo.replace('_', ' ')}
+                    </span>
+                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>{incidencia.id_incidencia}</span>
+                  </div>
+                  
+                  <h4 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--color-secondary)' }}>{incidencia.carretera}</span> - {incidencia.provincia}
+                  </h4>
+                  
+                  <p style={{ margin: '0 0 1rem 0' }}>{incidencia.descripcion}</p>
+                  
+                  <div style={{ 
+                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', 
+                    backgroundColor: 'var(--color-surface)', padding: '1rem', borderRadius: 'var(--radius-md)',
+                    fontSize: '0.9rem'
+                  }}>
+                    <div>
+                      <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Tramo Afectado:</strong>
+                      Km {incidencia.tramo.km_inicio} al {incidencia.tramo.km_fin} ({incidencia.tramo.sentido})
+                    </div>
+                    <div>
+                      <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Período:</strong>
+                      {formatDate(incidencia.periodo.inicio)} - {formatDate(incidencia.periodo.fin)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

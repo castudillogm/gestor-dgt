@@ -37,7 +37,9 @@ function getDb() {
 export default async function handler(request, response) {
   // Opcional: Proteger el endpoint con un Secret Token (útil si usamos cron-job.org)
   const authHeader = request.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const querySecret = request.query?.secret;
+  
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}` && querySecret !== process.env.CRON_SECRET) {
     return response.status(401).json({ error: 'No autorizado' });
   }
 

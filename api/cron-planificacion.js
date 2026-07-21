@@ -3,6 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import * as cheerio from 'cheerio';
 import { parseDgtExcel } from './utils/excel-parser.js';
 import { sendPlanningEmail } from './utils/mailer.js';
+import geoMap from './utils/geo-map.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -125,11 +126,25 @@ export default async function handler(request, response) {
            
            let userRestricciones = restricciones;
            if (!isTodas) {
-               // Filtrar por coincidencias en el municipio/población
+               // Filtrar por coincidencias en el municipio/población O mapeando municipio -> provincia
                userRestricciones = restricciones.filter(r => {
                    const muni = (r.municipio_inicio || '').toLowerCase();
-                   const hasProvincia = provincias.some(p => muni.includes(p.toLowerCase()));
+                   
+                   // Limpiamos el texto extra del excel (por ej. si dice "Las Rozas (Madrid)")
+                   const cleanMuni = muni.split('(')[0].trim();
+                   
+                   // 1. Buscamos la provincia en el diccionario a partir del municipio
+                   const mappedProvincia = geoMap[cleanMuni] || '';
+
+                   // 2. Verificamos si alguna provincia del usuario coincide con el mappedProvincia o con el texto bruto del municipio
+                   const hasProvincia = provincias.some(p => {
+                       const pLow = p.toLowerCase();
+                       return muni.includes(pLow) || mappedProvincia === pLow;
+                   });
+                   
+                   // 3. Verificamos si la ciudad especificada está en el municipio
                    const hasCiudad = ciudades && ciudades.split(',').some(c => muni.includes(c.trim().toLowerCase()));
+                   
                    return hasProvincia || hasCiudad;
                });
            }

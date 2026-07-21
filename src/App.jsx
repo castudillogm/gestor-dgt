@@ -11,7 +11,8 @@ function App() {
   useEffect(() => {
     const fetchIncidencias = async () => {
       try {
-        const response = await fetch('/api/incidencias');
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/incidencias?t=${timestamp}`);
         if (response.ok) {
           const data = await response.json();
           setIncidencias(data);

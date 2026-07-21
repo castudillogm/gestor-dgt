@@ -491,7 +491,7 @@ function App() {
                   V.H Pesados / ADR
                 </button>
                 <button 
-                  className={`btn ${filtroRapidoActivas === 'planificadas' ? 'btn-danger' : 'btn-outline-danger'}`}
+                  className={`btn ${filtroRapidoActivas === 'planificadas' ? 'btn-primary' : 'btn-outline-primary'}`}
                   style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
                   onClick={() => setFiltroRapidoActivas(filtroRapidoActivas === 'planificadas' ? 'todas' : 'planificadas')}
                 >

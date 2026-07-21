@@ -42,7 +42,7 @@ const generateEmailTemplate = (incidencia) => {
         </div>
         <div class="content">
           <span class="badge">ALERTA DGT: ${incidencia.tipo.replace('_', ' ')}</span>
-          <h2 class="title">${incidencia.carretera} - ${incidencia.provincia}</h2>
+          <h2 class="title">Carretera: ${incidencia.carretera} <span style="color:#1a1a2e; font-size:16px;">| Provincia: ${incidencia.provincia}</span></h2>
           <p>${incidencia.descripcion}</p>
           
           <div class="info-box">

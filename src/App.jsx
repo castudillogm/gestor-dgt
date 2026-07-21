@@ -143,7 +143,11 @@ function App() {
                   </div>
                   
                   <h4 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--color-secondary)' }}>{incidencia.carretera}</span> - {incidencia.provincia}
+                    <strong style={{ color: 'var(--color-primary)' }}>Carretera: </strong>
+                    <span style={{ color: 'var(--color-secondary)' }}>{incidencia.carretera}</span> 
+                    <span style={{ color: 'var(--color-text-muted)', margin: '0 8px' }}>|</span> 
+                    <strong style={{ color: 'var(--color-primary)' }}>Provincia: </strong>
+                    {incidencia.provincia}
                   </h4>
                   
                   <p style={{ margin: '0 0 1rem 0' }}>{incidencia.descripcion}</p>

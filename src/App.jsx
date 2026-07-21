@@ -57,6 +57,23 @@ const opcionesProvincias = [
   { value: 'melilla', label: 'Melilla' }
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+const parseSpanishDate = (dateStr) => {
+  if (!dateStr) return 0;
+  const months = { 'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5, 'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11 };
+  const match = dateStr.toLowerCase().match(/(\d+)\s+de\s+([a-z]+)/);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = months[match[2]];
+    if (month !== undefined) {
+      const now = new Date();
+      return new Date(now.getFullYear(), month, day).getTime();
+    }
+  }
+  return 0;
+};
+
 function App() {
   const [incidencias, setIncidencias] = useState([]);
   const [planificadas, setPlanificadas] = useState([]);
@@ -74,6 +91,9 @@ function App() {
   const [provinciasActivasSeleccionadas, setProvinciasActivasSeleccionadas] = useState(new Set());
   const [poblacionesSeleccionadas, setPoblacionesSeleccionadas] = useState(new Set());
   const [ordenPlanificadas, setOrdenPlanificadas] = useState('fecha');
+  const [ordenActivas, setOrdenActivas] = useState('fecha');
+  const [busquedaPoblacion, setBusquedaPoblacion] = useState('');
+  const [busquedaProvincia, setBusquedaProvincia] = useState('');
 
   // Estados para dropdowns de filtros
   const [mostrarDropdownProvincia, setMostrarDropdownProvincia] = useState(false);
@@ -171,13 +191,21 @@ function App() {
   
   if (ordenPlanificadas === 'poblacion') {
     planificadasFiltradas.sort((a, b) => (a.municipio_inicio || '').localeCompare(b.municipio_inicio || ''));
+  } else if (ordenPlanificadas === 'fecha') {
+    planificadasFiltradas.sort((a, b) => parseSpanishDate(a.fecha_texto) - parseSpanishDate(b.fecha_texto));
   }
 
   // Filtrado de Activas
-  const incidenciasFiltradas = incidencias.filter(inc => {
+  let incidenciasFiltradas = incidencias.filter(inc => {
     if (provinciasActivasSeleccionadas.size === 0) return true;
     return provinciasActivasSeleccionadas.has(inc.provincia);
   });
+
+  if (ordenActivas === 'fecha') {
+    incidenciasFiltradas.sort((a, b) => new Date(a.periodo?.inicio || 0) - new Date(b.periodo?.inicio || 0));
+  } else if (ordenActivas === 'provincia') {
+    incidenciasFiltradas.sort((a, b) => (a.provincia || '').localeCompare(b.provincia || ''));
+  }
 
   const getBadgeClass = (tipo) => {
     if (!tipo) return 'badge-dark';
@@ -376,8 +404,20 @@ function App() {
                        Filtrar Población ({poblacionesSeleccionadas.size > 0 ? poblacionesSeleccionadas.size : 'Todas'})
                      </button>
                      {mostrarDropdownPoblacion && (
-                       <div style={{ position: 'absolute', top: '110%', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px', padding: '1rem', zIndex: 10, width: '250px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                         {poblacionesFiltro.map(pob => (
+                       <div style={{ position: 'absolute', top: '110%', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px', padding: '1rem', zIndex: 10, width: '250px', maxHeight: '400px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                           <input 
+                             type="text" 
+                             placeholder="Buscar población..." 
+                             value={busquedaPoblacion}
+                             onChange={e => setBusquedaPoblacion(e.target.value)}
+                             style={{ padding: '0.5rem', width: '100%', border: '1px solid #ccc', borderRadius: '4px' }}
+                           />
+                           <button className="btn btn-outline" style={{ padding: '0.25rem', fontSize: '0.8rem' }} onClick={() => setPoblacionesSeleccionadas(new Set())}>
+                             Restablecer Filtro
+                           </button>
+                         </div>
+                         {poblacionesFiltro.filter(pob => pob.toLowerCase().includes(busquedaPoblacion.toLowerCase())).map(pob => (
                             <label key={pob} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
                               <input type="checkbox" checked={poblacionesSeleccionadas.has(pob)} onChange={() => togglePoblacion(pob)} /> 
                               {pob}
@@ -429,28 +469,51 @@ function App() {
           <div style={{ flex: '1 1 350px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Restricciones Activas</h3>
-              {provinciasActivasOpciones.length > 0 && (
-                 <div style={{ position: 'relative' }} ref={dropdownProvinciaRef}>
-                   <button 
-                     className="btn btn-outline" 
-                     onClick={() => setMostrarDropdownProvincia(!mostrarDropdownProvincia)}
-                     style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                   >
-                     Filtrar Provincia ({provinciasActivasSeleccionadas.size > 0 ? provinciasActivasSeleccionadas.size : 'Todas'})
-                   </button>
-                   {mostrarDropdownProvincia && (
-                     <div style={{ position: 'absolute', top: '110%', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px', padding: '1rem', zIndex: 10, width: '250px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                       {provinciasActivasOpciones.map(prov => (
-                          <label key={prov} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={provinciasActivasSeleccionadas.has(prov)} onChange={() => toggleProvincia(prov)} /> 
-                            {prov}
-                          </label>
-                       ))}
-                     </div>
-                   )}
-                 </div>
-              )}
-          </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <select 
+                  className="form-select" 
+                  style={{ padding: '0.5rem', width: 'auto', fontSize: '0.9rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  value={ordenActivas}
+                  onChange={(e) => setOrdenActivas(e.target.value)}
+                >
+                  <option value="fecha">Ordenar por Fecha</option>
+                  <option value="provincia">Ordenar por Provincia</option>
+                </select>
+                {provinciasActivasOpciones.length > 0 && (
+                   <div style={{ position: 'relative' }} ref={dropdownProvinciaRef}>
+                     <button 
+                       className="btn btn-outline" 
+                       onClick={() => setMostrarDropdownProvincia(!mostrarDropdownProvincia)}
+                       style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                     >
+                       Filtrar Provincia ({provinciasActivasSeleccionadas.size > 0 ? provinciasActivasSeleccionadas.size : 'Todas'})
+                     </button>
+                     {mostrarDropdownProvincia && (
+                       <div style={{ position: 'absolute', top: '110%', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px', padding: '1rem', zIndex: 10, width: '250px', maxHeight: '400px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                           <input 
+                             type="text" 
+                             placeholder="Buscar provincia..." 
+                             value={busquedaProvincia}
+                             onChange={e => setBusquedaProvincia(e.target.value)}
+                             style={{ padding: '0.5rem', width: '100%', border: '1px solid #ccc', borderRadius: '4px' }}
+                           />
+                           <button className="btn btn-outline" style={{ padding: '0.25rem', fontSize: '0.8rem' }} onClick={() => setProvinciasActivasSeleccionadas(new Set())}>
+                             Restablecer Filtro
+                           </button>
+                         </div>
+                         {provinciasActivasOpciones.filter(prov => prov.toLowerCase().includes(busquedaProvincia.toLowerCase())).map(prov => (
+                            <label key={prov} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={provinciasActivasSeleccionadas.has(prov)} onChange={() => toggleProvincia(prov)} /> 
+                              {prov}
+                            </label>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                )}
+              </div>
+            </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
             {loading ? (

@@ -55,6 +55,11 @@ export default async function handler(request, response) {
 
     let correosEnviados = 0;
 
+    // Precargar las planificadas para el cross-reference
+    const plannedSnapshot = await db.collection('planned_restrictions').get();
+    const planificadas = [];
+    plannedSnapshot.forEach(doc => planificadas.push(doc.data()));
+
     // 2. Procesar cada incidencia entrante
     for (const incidencia of dgtData) {
       // Verificar si ya la procesamos (evitar SPAM)
@@ -65,32 +70,44 @@ export default async function handler(request, response) {
         // La incidencia es NUEVA
         console.log(`Nueva incidencia detectada: ${incidencia.id_incidencia}`);
         
-        // 3. Verificar si esta incidencia estaba planificada en el Excel
-        const plannedSnapshot = await db.collection('planned_restrictions')
-          .where('carretera', '==', incidencia.carretera)
-          .get();
-        const isPlanificada = !plannedSnapshot.empty;
+        // 3. Cruzar datos heurísticos
+        const desc = (incidencia.descripcion || '').toLowerCase();
+        const tipo = (incidencia.tipo || '').toLowerCase();
+        const isPesados = desc.includes('pesados') || desc.includes('camion') || 
+                          desc.includes('camión') || desc.includes('mercanc') || desc.includes('adr');
+        
+        const isPlanificada = planificadas.some(plan => {
+          if (plan.carretera !== incidencia.carretera) return false;
+          
+          const cleanMuni = (plan.municipio_inicio || '').split('(')[0].trim().toLowerCase();
+          const mappedProvincia = geoMap[cleanMuni] || '';
+          const incProv = (incidencia.provincia || '').toLowerCase();
+          
+          return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
+        });
 
         if (isPlanificada) {
           console.log(`¡MATCH PREDICTIVO! La incidencia ${incidencia.id_incidencia} estaba planificada.`);
         }
 
-        // 4. Buscar usuarios interesados en esta provincia o en "Toda España"
-        // 'provincias' ahora es un array en Firebase
-        const usersSnapshot = await db.collection('users_subscriptions')
-          .where('provincias', 'array-contains-any', [incidencia.provincia.toLowerCase(), 'todas'])
-          .get();
+        // SOLO ENVIAR CORREOS SI ES PESADOS O PLANIFICADA
+        if (isPesados || isPlanificada) {
+          // 4. Buscar usuarios interesados en esta provincia o en "Toda España"
+          const usersSnapshot = await db.collection('users_subscriptions')
+            .where('provincias', 'array-contains-any', [incidencia.provincia.toLowerCase(), 'todas'])
+            .get();
 
-        if (!usersSnapshot.empty) {
-          // 5. Enviar correos a los afectados
-          const promesasCorreos = [];
-          usersSnapshot.forEach(userDoc => {
-            const userData = userDoc.data();
-            promesasCorreos.push(sendAlertEmail(userData.email, incidencia, isPlanificada));
-          });
+          if (!usersSnapshot.empty) {
+            // 5. Enviar correos a los afectados
+            const promesasCorreos = [];
+            usersSnapshot.forEach(userDoc => {
+              const userData = userDoc.data();
+              promesasCorreos.push(sendAlertEmail(userData.email, incidencia, isPlanificada));
+            });
 
-          await Promise.all(promesasCorreos);
-          correosEnviados += promesasCorreos.length;
+            await Promise.all(promesasCorreos);
+            correosEnviados += promesasCorreos.length;
+          }
         }
 
         // 5. Marcar la incidencia como procesada en Firestore

@@ -91,9 +91,11 @@ function App() {
   const [provinciasActivasSeleccionadas, setProvinciasActivasSeleccionadas] = useState(new Set());
   const [poblacionesSeleccionadas, setPoblacionesSeleccionadas] = useState(new Set());
   const [ordenPlanificadas, setOrdenPlanificadas] = useState('fecha');
-  const [ordenActivas, setOrdenActivas] = useState('fecha');
+  const [ordenActivas, setOrdenActivas] = useState('cronologico');
   const [busquedaPoblacion, setBusquedaPoblacion] = useState('');
   const [busquedaProvincia, setBusquedaProvincia] = useState('');
+  
+  const [filtroRapidoActivas, setFiltroRapidoActivas] = useState('todas'); // 'todas', 'pesados', 'planificadas'
 
   // Estados para dropdowns de filtros
   const [mostrarDropdownProvincia, setMostrarDropdownProvincia] = useState(false);
@@ -198,8 +200,18 @@ function App() {
 
   // Filtrado de Activas
   let incidenciasFiltradas = incidencias.filter(inc => {
-    if (provinciasActivasSeleccionadas.size === 0) return true;
-    return provinciasActivasSeleccionadas.has(inc.provincia);
+    // 1. Filtro por provincia
+    const matchProvincia = provinciasActivasSeleccionadas.size === 0 || provinciasActivasSeleccionadas.has(inc.provincia);
+    
+    // 2. Filtro Rápido (Pesados o Planificadas)
+    let matchRapido = true;
+    if (filtroRapidoActivas === 'pesados') {
+      matchRapido = inc.isPesados === true;
+    } else if (filtroRapidoActivas === 'planificadas') {
+      matchRapido = inc.isPlanificada === true;
+    }
+    
+    return matchProvincia && matchRapido;
   });
 
   if (ordenActivas === 'fecha') {
@@ -468,9 +480,23 @@ function App() {
 
           {/* Columna Derecha: Activas */}
           <div style={{ flex: '1 1 350px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Restricciones Activas</h3>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  className={`btn ${filtroRapidoActivas === 'pesados' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
+                  onClick={() => setFiltroRapidoActivas(filtroRapidoActivas === 'pesados' ? 'todas' : 'pesados')}
+                >
+                  V.H Pesados / ADR
+                </button>
+                <button 
+                  className={`btn ${filtroRapidoActivas === 'planificadas' ? 'btn-danger' : 'btn-outline-danger'}`}
+                  style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
+                  onClick={() => setFiltroRapidoActivas(filtroRapidoActivas === 'planificadas' ? 'todas' : 'planificadas')}
+                >
+                  PLAN ACTIVADA
+                </button>
                 <select 
                   className="form-select" 
                   style={{ padding: '0.5rem', width: 'auto', fontSize: '0.9rem', border: '1px solid #ccc', borderRadius: '4px' }}
@@ -528,10 +554,18 @@ function App() {
             ) : (
               incidenciasFiltradas.map((incidencia) => (
                 <div key={incidencia.id_incidencia} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--color-danger)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <span className={`badge ${getBadgeClass(incidencia.tipo)}`}>
-                      {incidencia.tipo ? incidencia.tipo.replace('_', ' ') : 'Alerta'}
-                    </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span className={`badge ${getBadgeClass(incidencia.tipo)}`}>
+                        {incidencia.tipo ? incidencia.tipo.replace('_', ' ') : 'Alerta'}
+                      </span>
+                      {incidencia.isPesados && (
+                        <span className="badge badge-primary">V.H PESADOS</span>
+                      )}
+                      {incidencia.isPlanificada && (
+                        <span className="badge badge-danger">PLAN ACTIVADA</span>
+                      )}
+                    </div>
                     <span className="text-muted" style={{ fontSize: '0.85rem' }}>{incidencia.id_incidencia}</span>
                   </div>
                   

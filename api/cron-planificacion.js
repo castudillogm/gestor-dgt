@@ -35,7 +35,9 @@ function getDb() {
 
 export default async function handler(request, response) {
   const authHeader = request.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}` && request.query.force !== 'true') {
+  const querySecret = request.query?.secret;
+  
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}` && request.query.force !== 'true' && querySecret !== process.env.CRON_SECRET) {
     return response.status(401).json({ error: 'No autorizado' });
   }
 

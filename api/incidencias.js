@@ -6,15 +6,29 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Inicializar Firebase si no está
-if (!getApps().length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
-}
+// Inicializar Firebase Admin
+function getDb() {
+  if (getApps().length === 0) {
+    try {
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      privateKey = privateKey.replace(/\\n/g, '\n');
 
-const db = getFirestore();
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+      });
+    } catch (error) {
+      console.error('Firebase initialization error', error);
+    }
+  }
+  return getFirestore();
+}
 
 export default async function handler(request, response) {
   if (request.method !== 'GET') {
@@ -22,6 +36,7 @@ export default async function handler(request, response) {
   }
 
   try {
+    const db = getDb();
     const rawData = await obtenerIncidenciasReales();
     
     // Obtener planificadas para el cross-reference

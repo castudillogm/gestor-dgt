@@ -73,6 +73,7 @@ function App() {
   // Filtros
   const [provinciasActivasSeleccionadas, setProvinciasActivasSeleccionadas] = useState(new Set());
   const [poblacionesSeleccionadas, setPoblacionesSeleccionadas] = useState(new Set());
+  const [ordenPlanificadas, setOrdenPlanificadas] = useState('fecha');
 
   // Estados para dropdowns de filtros
   const [mostrarDropdownProvincia, setMostrarDropdownProvincia] = useState(false);
@@ -163,10 +164,14 @@ function App() {
   const poblacionesFiltro = [...new Set(planificadas.map(p => p.municipio_inicio).filter(Boolean))].sort();
 
   // Filtrado de Planificadas
-  const planificadasFiltradas = planificadas.filter(plan => {
+  let planificadasFiltradas = planificadas.filter(plan => {
     if (poblacionesSeleccionadas.size === 0) return true;
     return poblacionesSeleccionadas.has(plan.municipio_inicio);
   });
+  
+  if (ordenPlanificadas === 'poblacion') {
+    planificadasFiltradas.sort((a, b) => (a.municipio_inicio || '').localeCompare(b.municipio_inicio || ''));
+  }
 
   // Filtrado de Activas
   const incidenciasFiltradas = incidencias.filter(inc => {
@@ -214,11 +219,11 @@ function App() {
 
   return (
     <div className="App">
-      <header className="header" style={{ backgroundColor: 'var(--color-secondary)', color: 'white' }}>
+      <header className="header" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
              <div style={{ 
-               backgroundColor: 'var(--color-primary)', 
+               backgroundColor: 'var(--color-secondary)', 
                color: 'white', 
                width: '40px', height: '40px', 
                borderRadius: '8px', 
@@ -235,7 +240,7 @@ function App() {
           </div>
           <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <a href="#alertas" style={{ color: 'var(--color-text-inverse)', fontWeight: '600', textDecoration: 'none' }}>Ver Alertas</a>
-            <a href="#suscripcion" className="btn" style={{ padding: '0.5rem 1rem', textDecoration: 'none', backgroundColor: 'white', color: 'var(--color-secondary)', fontWeight: 'bold' }}>Suscribirse</a>
+            <a href="#suscripcion" className="btn" style={{ padding: '0.5rem 1rem', textDecoration: 'none', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 'bold' }}>Suscribirse</a>
           </nav>
         </div>
       </header>
@@ -349,29 +354,40 @@ function App() {
           
           {/* Columna Izquierda: Planificadas */}
           <div id="planificadas" style={{ flex: '1 1 350px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Restricciones Planificadas</h3>
-               {poblacionesFiltro.length > 0 && (
-                 <div style={{ position: 'relative' }} ref={dropdownPoblacionRef}>
-                   <button 
-                     className="btn btn-outline" 
-                     onClick={() => setMostrarDropdownPoblacion(!mostrarDropdownPoblacion)}
-                     style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                   >
-                     Filtrar Población ({poblacionesSeleccionadas.size > 0 ? poblacionesSeleccionadas.size : 'Todas'})
-                   </button>
-                   {mostrarDropdownPoblacion && (
-                     <div style={{ position: 'absolute', top: '110%', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px', padding: '1rem', zIndex: 10, width: '250px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                       {poblacionesFiltro.map(pob => (
-                          <label key={pob} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={poblacionesSeleccionadas.has(pob)} onChange={() => togglePoblacion(pob)} /> 
-                            {pob}
-                          </label>
-                       ))}
-                     </div>
-                   )}
-                 </div>
-               )}
+               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                 <select 
+                   className="form-select" 
+                   style={{ padding: '0.5rem', width: 'auto', fontSize: '0.9rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                   value={ordenPlanificadas}
+                   onChange={(e) => setOrdenPlanificadas(e.target.value)}
+                 >
+                   <option value="fecha">Ordenar por Fecha</option>
+                   <option value="poblacion">Ordenar por Población</option>
+                 </select>
+                 {poblacionesFiltro.length > 0 && (
+                   <div style={{ position: 'relative' }} ref={dropdownPoblacionRef}>
+                     <button 
+                       className="btn btn-outline" 
+                       onClick={() => setMostrarDropdownPoblacion(!mostrarDropdownPoblacion)}
+                       style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                     >
+                       Filtrar Población ({poblacionesSeleccionadas.size > 0 ? poblacionesSeleccionadas.size : 'Todas'})
+                     </button>
+                     {mostrarDropdownPoblacion && (
+                       <div style={{ position: 'absolute', top: '110%', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px', padding: '1rem', zIndex: 10, width: '250px', maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                         {poblacionesFiltro.map(pob => (
+                            <label key={pob} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={poblacionesSeleccionadas.has(pob)} onChange={() => togglePoblacion(pob)} /> 
+                              {pob}
+                            </label>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                 )}
+               </div>
             </div>
             
 
@@ -477,6 +493,10 @@ function App() {
                     <div>
                       <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Provincia:</strong>
                       {incidencia.provincia}
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <strong style={{ display: 'inline-block', color: 'var(--color-primary)', marginRight: '0.5rem' }}>Período:</strong>
+                      {new Date(incidencia.periodo?.inicio).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })} - {new Date(incidencia.periodo?.fin).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
                     </div>
                   </div>
                 </div>

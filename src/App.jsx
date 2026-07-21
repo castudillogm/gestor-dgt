@@ -263,20 +263,8 @@ function App() {
       <header className="header" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-             <div style={{ 
-               backgroundColor: 'var(--color-secondary)', 
-               color: 'white', 
-               width: '40px', height: '40px', 
-               borderRadius: '8px', 
-               display: 'flex', alignItems: 'center', justifyContent: 'center',
-               fontWeight: 'bold', fontSize: '1.2rem', marginRight: '1rem',
-               boxShadow: '0 4px 10px rgba(9, 17, 151, 0.3)'
-             }}>
-               GM
-             </div>
              <div>
-               <img src="/logo.png" alt="GrupaMar" style={{ maxHeight: '45px', marginBottom: '5px' }} />
-               <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem', color: 'white' }}>GrupaMar - Logística y Transporte</p>
+               <img src="/logo.png" alt="GrupaMar" style={{ maxHeight: '45px' }} />
              </div>
           </div>
           <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

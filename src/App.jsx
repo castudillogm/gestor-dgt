@@ -160,10 +160,11 @@ function App() {
     e.preventDefault();
     setLoadingSub(true);
     try {
+      const provinciasList = provinciasSub.map(p => p.value);
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, provincias: [provincia] })
+        body: JSON.stringify({ email, provincias: provinciasList, ciudades: ciudadesSub })
       });
       const data = await res.json();
       if (data.success) {

@@ -1,5 +1,61 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
+import Select from 'react-select';
+
+const opcionesProvincias = [
+  { value: 'a coruña', label: 'A Coruña' },
+  { value: 'álava', label: 'Álava' },
+  { value: 'albacete', label: 'Albacete' },
+  { value: 'alicante', label: 'Alicante' },
+  { value: 'almería', label: 'Almería' },
+  { value: 'asturias', label: 'Asturias' },
+  { value: 'ávila', label: 'Ávila' },
+  { value: 'badajoz', label: 'Badajoz' },
+  { value: 'baleares', label: 'Baleares' },
+  { value: 'barcelona', label: 'Barcelona' },
+  { value: 'burgos', label: 'Burgos' },
+  { value: 'cáceres', label: 'Cáceres' },
+  { value: 'cádiz', label: 'Cádiz' },
+  { value: 'cantabria', label: 'Cantabria' },
+  { value: 'castellón', label: 'Castellón' },
+  { value: 'ciudad real', label: 'Ciudad Real' },
+  { value: 'córdoba', label: 'Córdoba' },
+  { value: 'cuenca', label: 'Cuenca' },
+  { value: 'girona', label: 'Girona' },
+  { value: 'granada', label: 'Granada' },
+  { value: 'guadalajara', label: 'Guadalajara' },
+  { value: 'gipuzkoa', label: 'Gipuzkoa' },
+  { value: 'huelva', label: 'Huelva' },
+  { value: 'huesca', label: 'Huesca' },
+  { value: 'jaén', label: 'Jaén' },
+  { value: 'la rioja', label: 'La Rioja' },
+  { value: 'las palmas', label: 'Las Palmas' },
+  { value: 'león', label: 'León' },
+  { value: 'lleida', label: 'Lleida' },
+  { value: 'lugo', label: 'Lugo' },
+  { value: 'madrid', label: 'Madrid' },
+  { value: 'málaga', label: 'Málaga' },
+  { value: 'murcia', label: 'Murcia' },
+  { value: 'navarra', label: 'Navarra' },
+  { value: 'ourense', label: 'Ourense' },
+  { value: 'palencia', label: 'Palencia' },
+  { value: 'pontevedra', label: 'Pontevedra' },
+  { value: 'salamanca', label: 'Salamanca' },
+  { value: 'segovia', label: 'Segovia' },
+  { value: 'sevilla', label: 'Sevilla' },
+  { value: 'soria', label: 'Soria' },
+  { value: 'tarragona', label: 'Tarragona' },
+  { value: 'santa cruz de tenerife', label: 'Santa Cruz de Tenerife' },
+  { value: 'teruel', label: 'Teruel' },
+  { value: 'toledo', label: 'Toledo' },
+  { value: 'valencia', label: 'Valencia' },
+  { value: 'valladolid', label: 'Valladolid' },
+  { value: 'vizcaya', label: 'Vizcaya' },
+  { value: 'zamora', label: 'Zamora' },
+  { value: 'zaragoza', label: 'Zaragoza' },
+  { value: 'ceuta', label: 'Ceuta' },
+  { value: 'melilla', label: 'Melilla' }
+];
 
 function App() {
   const [incidencias, setIncidencias] = useState([]);
@@ -9,7 +65,8 @@ function App() {
   
   // Suscripción state
   const [email, setEmail] = useState('');
-  const [provincia, setProvincia] = useState('');
+  const [provinciasSub, setProvinciasSub] = useState([]);
+  const [ciudadesSub, setCiudadesSub] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [loadingSub, setLoadingSub] = useState(false);
   
@@ -180,16 +237,16 @@ function App() {
       </header>
 
       {/* Hero Section & Subscription */}
-      <section style={{ padding: '4rem 0', backgroundColor: 'var(--color-surface)' }}>
+      <section style={{ padding: '4rem 0', backgroundColor: '#0ea5e9' }}>
         <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', alignItems: 'center' }}>
           
           {/* Columna Izquierda: Hero Text */}
           <div style={{ flex: '1 1 500px' }}>
-            <h2 className="title-secondary">Gestor de Tráfico PRO</h2>
-            <h1 className="title-primary" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+            <h2 className="title-secondary" style={{ color: 'white' }}>Gestor de Tráfico PRO</h2>
+            <h1 className="title-primary" style={{ marginBottom: '1.5rem', textAlign: 'left', color: 'white' }}>
               Alertas de Restricciones DGT en Tiempo Real
             </h1>
-            <p className="text-muted" style={{ fontSize: '1.15rem', marginBottom: '2.5rem', textAlign: 'left' }}>
+            <p style={{ fontSize: '1.15rem', marginBottom: '2.5rem', textAlign: 'left', color: 'white' }}>
               Anticípate a los cortes viales, obras y restricciones de festivos. Optimiza tus rutas de transporte 
               recibiendo avisos automatizados directamente en tu correo electrónico.
             </p>
@@ -235,22 +292,27 @@ function App() {
                   
                   <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                     <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Provincia de Interés</label>
-                    <select 
-                      className="form-select" 
-                      value={provincia}
-                      onChange={(e) => setProvincia(e.target.value)}
-                      required
-                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                      <option value="">Selecciona una provincia...</option>
-                      <option value="madrid">Madrid</option>
-                      <option value="barcelona">Barcelona</option>
-                      <option value="valencia">Valencia</option>
-                      <option value="sevilla">Sevilla</option>
-                      <option value="todas">Toda España</option>
-                    </select>
+                    <Select 
+                        isMulti
+                        options={opcionesProvincias}
+                        value={provinciasSub}
+                        onChange={setProvinciasSub}
+                        placeholder="Selecciona provincias..."
+                      />
                   </div>
                   
+
+                  <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Ciudades (Opcional)</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Ej: Madrid, Móstoles, Alcalá..." 
+                      value={ciudadesSub}
+                      onChange={(e) => setCiudadesSub(e.target.value)}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </div>
                   <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }} disabled={loadingSub}>
                     {loadingSub ? 'Enviando...' : 'Activar Alertas'}
                   </button>
@@ -281,7 +343,7 @@ function App() {
             </div>
             <div className="card" style={{ flex: 1, padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--color-danger)' }}>
               <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1 }}>{incidencias.length}</div>
-              <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Incidencias Activas Hoy</div>
+              <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Restricciones Activas Hoy</div>
             </div>
           </div>
         </div>
@@ -354,7 +416,7 @@ function App() {
           {/* Columna Derecha: Activas */}
           <div style={{ flex: '1 1 350px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Incidencias Activas</h3>
+              <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Restricciones Activas</h3>
               {provinciasActivasOpciones.length > 0 && (
                  <div style={{ position: 'relative' }} ref={dropdownProvinciaRef}>
                    <button 

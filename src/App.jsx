@@ -210,7 +210,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="header" style={{ backgroundColor: '#0ea5e9', color: 'white' }}>
+      <header className="header" style={{ backgroundColor: 'var(--color-secondary)', color: 'white' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
              <div style={{ 
@@ -231,7 +231,7 @@ function App() {
           </div>
           <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <a href="#alertas" style={{ color: 'var(--color-text-inverse)', fontWeight: '600', textDecoration: 'none' }}>Ver Alertas</a>
-            <a href="#suscripcion" className="btn" style={{ padding: '0.5rem 1rem', textDecoration: 'none', backgroundColor: 'white', color: '#0ea5e9', fontWeight: 'bold' }}>Suscribirse</a>
+            <a href="#suscripcion" className="btn" style={{ padding: '0.5rem 1rem', textDecoration: 'none', backgroundColor: 'white', color: 'var(--color-secondary)', fontWeight: 'bold' }}>Suscribirse</a>
           </nav>
         </div>
       </header>

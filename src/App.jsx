@@ -370,7 +370,7 @@ function App() {
                )}
             </div>
             
-            <p className="text-muted" style={{ marginBottom: '2rem' }}>Extraídas automáticamente del último Excel publicado.</p>
+
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               {loadingPlanificadas ? (

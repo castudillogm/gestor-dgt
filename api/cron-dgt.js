@@ -65,17 +65,28 @@ export default async function handler(request, response) {
         // La incidencia es NUEVA
         console.log(`Nueva incidencia detectada: ${incidencia.id_incidencia}`);
         
-        // 3. Buscar usuarios interesados en esta provincia o en "Toda España"
+        // 3. Verificar si esta incidencia estaba planificada en el Excel
+        const plannedSnapshot = await db.collection('planned_restrictions')
+          .where('carretera', '==', incidencia.carretera)
+          .get();
+        const isPlanificada = !plannedSnapshot.empty;
+
+        if (isPlanificada) {
+          console.log(`¡MATCH PREDICTIVO! La incidencia ${incidencia.id_incidencia} estaba planificada.`);
+        }
+
+        // 4. Buscar usuarios interesados en esta provincia o en "Toda España"
+        // 'provincias' ahora es un array en Firebase
         const usersSnapshot = await db.collection('users_subscriptions')
-          .where('provincia', 'in', [incidencia.provincia.toLowerCase(), 'todas'])
+          .where('provincias', 'array-contains-any', [incidencia.provincia.toLowerCase(), 'todas'])
           .get();
 
         if (!usersSnapshot.empty) {
-          // 4. Enviar correos a los afectados
+          // 5. Enviar correos a los afectados
           const promesasCorreos = [];
           usersSnapshot.forEach(userDoc => {
             const userData = userDoc.data();
-            promesasCorreos.push(sendAlertEmail(userData.email, incidencia));
+            promesasCorreos.push(sendAlertEmail(userData.email, incidencia, isPlanificada));
           });
 
           await Promise.all(promesasCorreos);
@@ -88,6 +99,24 @@ export default async function handler(request, response) {
           provincia: incidencia.provincia
         });
       }
+    }
+
+    // 6. Limpiar incidencias que ya han sido resueltas
+    const processedSnapshot = await db.collection('processed_incidents').get();
+    const activeIds = dgtData.map(inc => inc.id_incidencia);
+    const deleteBatch = db.batch();
+    let deletedCount = 0;
+    
+    processedSnapshot.docs.forEach(doc => {
+      if (!activeIds.includes(doc.id)) {
+        deleteBatch.delete(doc.ref);
+        deletedCount++;
+      }
+    });
+
+    if (deletedCount > 0) {
+      await deleteBatch.commit();
+      console.log(`Se limpiaron ${deletedCount} incidencias resueltas de la base de datos.`);
     }
 
     return response.status(200).json({ 

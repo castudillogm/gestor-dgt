@@ -35,31 +35,26 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { email, provincia } = request.body;
+    const { email, provincias, ciudades } = request.body;
 
-    if (!email || !provincia) {
-      return response.status(400).json({ error: 'Email y provincia son obligatorios' });
+    if (!email || !provincias || !Array.isArray(provincias)) {
+      return response.status(400).json({ error: 'Email y lista de provincias son obligatorios' });
     }
 
     const db = getDb();
     
-    // Crear un ID único o usar el email como ID
     const userRef = db.collection('users_subscriptions').doc(email.toLowerCase());
     
-    // Verificar si ya existe
-    const doc = await userRef.get();
-    if (doc.exists) {
-      return response.status(409).json({ error: 'Este correo ya se encuentra suscrito en el sistema.' });
-    }
-
+    // Podemos permitir actualizar la suscripción existente con merge: true
     await userRef.set({
       email: email.toLowerCase(),
-      provincia: provincia.toLowerCase(),
-      created_at: FieldValue.serverTimestamp()
-    }); // No usamos merge porque sabemos que es nuevo
+      provincias: provincias.map(p => p.toLowerCase()),
+      ciudades: (ciudades || '').toLowerCase(),
+      updated_at: FieldValue.serverTimestamp()
+    }, { merge: true });
 
-    // Enviar correo de bienvenida
-    await sendWelcomeEmail(email.toLowerCase(), provincia.toLowerCase());
+    // Enviar correo de bienvenida (TODO: update mailer to handle arrays)
+    await sendWelcomeEmail(email.toLowerCase(), provincias.join(', '));
 
     return response.status(200).json({ success: true, message: 'Suscrito correctamente' });
   } catch (error) {

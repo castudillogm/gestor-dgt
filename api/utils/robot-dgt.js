@@ -37,6 +37,7 @@ export async function obtenerIncidenciasReales() {
         tipo,
         carretera: inc.road || "Vía Desconocida",
         provincia: inc.province || "N/A",
+        ciudad: inc.cityTown || "N/A",
         tramo: { 
           km_inicio: inc.pkStart || 0, 
           km_fin: inc.pkEnd || 0, 

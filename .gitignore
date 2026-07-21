@@ -25,3 +25,4 @@ dist-ssr
 
 gestor-trafico-dgt-firebase-adminsdk-fbsvc-*.json
 .env
+.vercel

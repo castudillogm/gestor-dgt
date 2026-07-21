@@ -15,7 +15,9 @@
     "firebase-admin": "^14.2.0",
     "nodemailer": "^9.0.3",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-select": "^5.10.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",

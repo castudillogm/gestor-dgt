@@ -2,6 +2,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as cheerio from 'cheerio';
 import { parseDgtExcel } from './utils/excel-parser.js';
+import { sendPlanningEmail } from './utils/mailer.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -111,7 +112,22 @@ export default async function handler(request, response) {
        await batch.commit();
        console.log('Restricciones guardadas en Firestore.');
        
-       // TODO: Lógica de envío de correos "Planificación Semanal" cruzando con suscripciones.
+       // Lógica de envío de correos "Planificación Semanal" a los usuarios suscritos
+       const usersSnapshot = await db.collection('users_subscriptions').get();
+       
+       if (!usersSnapshot.empty) {
+         console.log(`Enviando alertas de planificación a ${usersSnapshot.size} usuarios suscritos.`);
+         const promesasCorreos = [];
+         usersSnapshot.forEach(userDoc => {
+           const userData = userDoc.data();
+           promesasCorreos.push(sendPlanningEmail(userData.email, restricciones));
+         });
+         
+         await Promise.all(promesasCorreos);
+         console.log(`Se enviaron correos de planificación a ${promesasCorreos.length} usuarios.`);
+       } else {
+         console.log('No hay usuarios suscritos para enviar la planificación.');
+       }
     }
 
     return response.status(200).json({ 

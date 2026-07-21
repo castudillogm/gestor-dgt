@@ -1,19 +1,24 @@
-// Conector para extraer incidencias reales
-// Utiliza la API de Open Data de Euskadi (Tráfico) que provee un JSON público y estructurado
-// en tiempo real como alternativa ultraligera a las limitaciones del NAP de la DGT para este entorno Serverless.
+import https from 'https';
 
 export async function obtenerIncidenciasReales() {
   try {
     console.log('🤖 Robot: Buscando incidencias reales en fuentes Open Data (API Euskadi)...');
     
-    // Obtenemos los datos en tiempo real
-    const response = await fetch('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20');
-    
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
+    // Forzamos IPv4 en Vercel para evitar bloqueos por IPv6 en servidores gubernamentales
+    const data = await new Promise((resolve, reject) => {
+      https.get('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20', { family: 4 }, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try {
+            if (res.statusCode !== 200) throw new Error(`Error HTTP: ${res.statusCode}`);
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }).on('error', reject);
+    });
     
     // Transformamos los datos al formato genérico de nuestro sistema
     const incidenciasEstandar = data.incidences.map(inc => {

@@ -50,28 +50,6 @@ export async function obtenerIncidenciasReales() {
 
   } catch (error) {
     console.error('🤖 Robot Error:', error.message);
-    // En caso de error (o bloqueo de IP en Vercel), mostramos una incidencia de hace más de una semana 
-    // para verificar que el sistema de retención y la UI funcionan con incidencias de larga duración.
-    const haceUnaSemana = new Date();
-    haceUnaSemana.setDate(haceUnaSemana.getDate() - 8);
-
-    return [
-      {
-        id_incidencia: 'TRF-HISTORICA-001',
-        tipo: 'OBRAS',
-        carretera: 'A-6',
-        provincia: 'MADRID',
-        tramo: { 
-          km_inicio: 15, 
-          km_fin: 18, 
-          sentido: 'A Coruña'
-        },
-        periodo: { 
-          inicio: haceUnaSemana.toISOString(), 
-          fin: new Date(Date.now() + 864000000).toISOString() // Finaliza en 10 días
-        },
-        descripcion: 'Corte parcial por obras de asfaltado prolongadas (Incidencia de hace más de 1 semana). Nivel: Amarillo.'
-      }
-    ];
+    return []; // En caso de error, devolver vacío para no romper la app
   }
 }

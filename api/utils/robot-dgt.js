@@ -6,7 +6,7 @@ export async function obtenerIncidenciasReales() {
     
     // Forzamos IPv4 en Vercel para evitar bloqueos por IPv6 en servidores gubernamentales
     const data = await new Promise((resolve, reject) => {
-      https.get('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20', { family: 4 }, (res) => {
+      https.get('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20', { family: 4, rejectUnauthorized: false }, (res) => {
         let body = '';
         res.on('data', chunk => body += chunk);
         res.on('end', () => {

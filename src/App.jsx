@@ -210,7 +210,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="header">
+      <header className="header" style={{ backgroundColor: '#0ea5e9', color: 'white' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
              <div style={{ 
@@ -225,28 +225,28 @@ function App() {
                GM
              </div>
              <div>
-               <h1 style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.5px' }}>Gestor DGT Inteligente</h1>
-               <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>GrupaMar - Logística y Transporte</p>
+               <h1 style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.5px', color: 'white' }}>Gestor DGT Inteligente</h1>
+               <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem', color: 'white' }}>GrupaMar - Logística y Transporte</p>
              </div>
           </div>
           <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <a href="#alertas" style={{ color: 'var(--color-text-inverse)', fontWeight: '600', textDecoration: 'none' }}>Ver Alertas</a>
-            <a href="#suscripcion" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', textDecoration: 'none' }}>Suscribirse</a>
+            <a href="#suscripcion" className="btn" style={{ padding: '0.5rem 1rem', textDecoration: 'none', backgroundColor: 'white', color: '#0ea5e9', fontWeight: 'bold' }}>Suscribirse</a>
           </nav>
         </div>
       </header>
 
       {/* Hero Section & Subscription */}
-      <section style={{ padding: '4rem 0', backgroundColor: '#0ea5e9' }}>
+      <section style={{ padding: '4rem 0', backgroundColor: 'var(--color-surface)' }}>
         <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', alignItems: 'center' }}>
           
           {/* Columna Izquierda: Hero Text */}
           <div style={{ flex: '1 1 500px' }}>
-            <h2 className="title-secondary" style={{ color: 'white' }}>Gestor de Tráfico PRO</h2>
-            <h1 className="title-primary" style={{ marginBottom: '1.5rem', textAlign: 'left', color: 'white' }}>
+            <h2 className="title-secondary">Gestor de Tráfico PRO</h2>
+            <h1 className="title-primary" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
               Alertas de Restricciones DGT en Tiempo Real
             </h1>
-            <p style={{ fontSize: '1.15rem', marginBottom: '2.5rem', textAlign: 'left', color: 'white' }}>
+            <p className="text-muted" style={{ fontSize: '1.15rem', marginBottom: '2.5rem', textAlign: 'left' }}>
               Anticípate a los cortes viales, obras y restricciones de festivos. Optimiza tus rutas de transporte 
               recibiendo avisos automatizados directamente en tu correo electrónico.
             </p>

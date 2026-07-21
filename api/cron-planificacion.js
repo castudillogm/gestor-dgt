@@ -116,15 +116,32 @@ export default async function handler(request, response) {
        const usersSnapshot = await db.collection('users_subscriptions').get();
        
        if (!usersSnapshot.empty) {
-         console.log(`Enviando alertas de planificación a ${usersSnapshot.size} usuarios suscritos.`);
+         console.log(`Evaluando alertas de planificación para ${usersSnapshot.size} usuarios suscritos.`);
          const promesasCorreos = [];
          usersSnapshot.forEach(userDoc => {
            const userData = userDoc.data();
-           promesasCorreos.push(sendPlanningEmail(userData.email, restricciones));
+           const { provincias = [], ciudades = '' } = userData;
+           const isTodas = provincias.includes('todas');
+           
+           let userRestricciones = restricciones;
+           if (!isTodas) {
+               // Filtrar por coincidencias en el municipio/población
+               userRestricciones = restricciones.filter(r => {
+                   const muni = (r.municipio_inicio || '').toLowerCase();
+                   const hasProvincia = provincias.some(p => muni.includes(p.toLowerCase()));
+                   const hasCiudad = ciudades && ciudades.split(',').some(c => muni.includes(c.trim().toLowerCase()));
+                   return hasProvincia || hasCiudad;
+               });
+           }
+
+           // Solo enviamos si hay al menos una restricción que le afecte (o si eligió Todas)
+           if (userRestricciones.length > 0) {
+               promesasCorreos.push(sendPlanningEmail(userData.email, userRestricciones));
+           }
          });
          
          await Promise.all(promesasCorreos);
-         console.log(`Se enviaron correos de planificación a ${promesasCorreos.length} usuarios.`);
+         console.log(`Se enviaron correos de planificación a ${promesasCorreos.length} usuarios afectados.`);
        } else {
          console.log('No hay usuarios suscritos para enviar la planificación.');
        }

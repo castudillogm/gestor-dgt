@@ -101,7 +101,9 @@ function App() {
     try {
       const res = await fetch('/api/incidencias');
       const data = await res.json();
-      if (data.success) {
+      if (Array.isArray(data)) {
+        setIncidencias(data);
+      } else if (data.success && Array.isArray(data.data)) {
         setIncidencias(data.data);
       }
     } catch (error) {
@@ -116,7 +118,9 @@ function App() {
     try {
       const res = await fetch('/api/planificadas');
       const data = await res.json();
-      if (data.success) {
+      if (Array.isArray(data)) {
+        setPlanificadas(data);
+      } else if (data.success && Array.isArray(data.data)) {
         setPlanificadas(data.data);
       }
     } catch (error) {

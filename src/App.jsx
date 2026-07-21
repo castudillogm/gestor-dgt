@@ -275,7 +275,7 @@ function App() {
                GM
              </div>
              <div>
-               <h1 style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.5px', color: 'white' }}>Gestor DGT Inteligente</h1>
+               <img src="/logo.png" alt="GrupaMar" style={{ maxHeight: '45px', marginBottom: '5px' }} />
                <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem', color: 'white' }}>GrupaMar - Logística y Transporte</p>
              </div>
           </div>

@@ -41,7 +41,7 @@ const generateEmailTemplate = (incidencia, isPlanificada = false) => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>GrupaMar</h1>
+          <img src="https://gestor-dgt.vercel.app/logo.png" alt="GrupaMar" style="max-height: 45px; margin-bottom: 5px;" />
           <p>Transporte y Logística</p>
         </div>
         <div class="content">
@@ -110,7 +110,7 @@ const generateWelcomeTemplate = (provincia) => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>GrupaMar</h1>
+          <img src="https://gestor-dgt.vercel.app/logo.png" alt="GrupaMar" style="max-height: 45px; margin-bottom: 5px;" />
           <p>Transporte y Logística</p>
         </div>
         <div class="content">
@@ -180,7 +180,7 @@ export const sendPlanningEmail = async (to, restricciones) => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>GrupaMar</h1>
+          <img src="https://gestor-dgt.vercel.app/logo.png" alt="GrupaMar" style="max-height: 45px; margin-bottom: 5px;" />
           <p style="color: #03A9EC; font-style: italic; margin: 5px 0 0 0;">Transporte y Logística</p>
         </div>
         <div class="content">

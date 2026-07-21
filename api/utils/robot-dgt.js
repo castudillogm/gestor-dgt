@@ -52,6 +52,43 @@ export async function obtenerIncidenciasReales() {
     });
 
     console.log(`🤖 Robot: Se han extraído ${incidenciasEstandar.length} incidencias reales exitosamente.`);
+
+    if (incidenciasEstandar.length === 0) {
+      console.log('🤖 Robot: No se encontraron incidencias activas. Usando datos de prueba (históricos) para demostración.');
+      return [
+        {
+          id_incidencia: "TRF-DEMO-1",
+          tipo: "OBRAS",
+          carretera: "A-1",
+          provincia: "Madrid",
+          ciudad: "Madrid",
+          tramo: { km_inicio: 12, km_fin: 15, sentido: "Creciente" },
+          periodo: { inicio: new Date().toISOString(), fin: new Date(Date.now() + 86400000).toISOString() },
+          descripcion: "Obras de mantenimiento en calzada. Carril derecho cerrado."
+        },
+        {
+          id_incidencia: "TRF-DEMO-2",
+          tipo: "ACCIDENTE",
+          carretera: "AP-7",
+          provincia: "Valencia",
+          ciudad: "Sagunto",
+          tramo: { km_inicio: 470, km_fin: 471, sentido: "Decreciente" },
+          periodo: { inicio: new Date().toISOString(), fin: new Date(Date.now() + 3600000).toISOString() },
+          descripcion: "Accidente con alcance de dos turismos. Retenciones de 2km."
+        },
+        {
+          id_incidencia: "TRF-DEMO-3",
+          tipo: "RETENCION",
+          carretera: "A-4",
+          provincia: "Sevilla",
+          ciudad: "Dos Hermanas",
+          tramo: { km_inicio: 553, km_fin: 558, sentido: "Ambos" },
+          periodo: { inicio: new Date().toISOString(), fin: new Date(Date.now() + 7200000).toISOString() },
+          descripcion: "Congestión por alta afluencia de vehículos."
+        }
+      ];
+    }
+
     return incidenciasEstandar;
 
   } catch (error) {

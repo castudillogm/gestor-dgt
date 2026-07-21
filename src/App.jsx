@@ -7,6 +7,12 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [loadingPlanificadas, setLoadingPlanificadas] = useState(true);
   
+  // Suscripción state
+  const [email, setEmail] = useState('');
+  const [provincia, setProvincia] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [loadingSub, setLoadingSub] = useState(false);
+  
   // Filtros
   const [provinciasActivasSeleccionadas, setProvinciasActivasSeleccionadas] = useState(new Set());
   const [poblacionesSeleccionadas, setPoblacionesSeleccionadas] = useState(new Set());
@@ -68,6 +74,29 @@ function App() {
     fetchPlanificadas();
   }, []);
 
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    setLoadingSub(true);
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, provincias: [provincia] })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubscribed(true);
+      } else {
+        alert(data.error || 'Error en la suscripción');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error de conexión');
+    } finally {
+      setLoadingSub(false);
+    }
+  };
+
   // Opciones únicas para filtros
   const provinciasActivasOpciones = [...new Set(incidencias.map(i => i.provincia).filter(Boolean))].sort();
   const poblacionesFiltro = [...new Set(planificadas.map(p => p.municipio_inicio).filter(Boolean))].sort();
@@ -126,10 +155,117 @@ function App() {
     <div className="App">
       <header className="header">
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', letterSpacing: '-0.5px' }}>Gestor DGT Inteligente</h1>
-            <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem' }}>GrupaMar - Logística y Transporte</p>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+             <div style={{ 
+               backgroundColor: 'var(--color-primary)', 
+               color: 'white', 
+               width: '40px', height: '40px', 
+               borderRadius: '8px', 
+               display: 'flex', alignItems: 'center', justifyContent: 'center',
+               fontWeight: 'bold', fontSize: '1.2rem', marginRight: '1rem',
+               boxShadow: '0 4px 10px rgba(9, 17, 151, 0.3)'
+             }}>
+               GM
+             </div>
+             <div>
+               <h1 style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.5px' }}>Gestor DGT Inteligente</h1>
+               <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>GrupaMar - Logística y Transporte</p>
+             </div>
           </div>
+          <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="#alertas" style={{ color: 'var(--color-text-inverse)', fontWeight: '600', textDecoration: 'none' }}>Ver Alertas</a>
+            <a href="#suscripcion" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', textDecoration: 'none' }}>Suscribirse</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero Section & Subscription */}
+      <section style={{ padding: '4rem 0', backgroundColor: 'var(--color-surface)' }}>
+        <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', alignItems: 'center' }}>
+          
+          {/* Columna Izquierda: Hero Text */}
+          <div style={{ flex: '1 1 500px' }}>
+            <h2 className="title-secondary">Gestor de Tráfico PRO</h2>
+            <h1 className="title-primary" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+              Alertas de Restricciones DGT en Tiempo Real
+            </h1>
+            <p className="text-muted" style={{ fontSize: '1.15rem', marginBottom: '2.5rem', textAlign: 'left' }}>
+              Anticípate a los cortes viales, obras y restricciones de festivos. Optimiza tus rutas de transporte 
+              recibiendo avisos automatizados directamente en tu correo electrónico.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <a href="#alertas" className="btn btn-primary" style={{ textDecoration: 'none' }}>Explorar Mapa y Alertas</a>
+            </div>
+          </div>
+          
+          {/* Columna Derecha: Recibe Alertas (Suscripción) */}
+          <div style={{ flex: '1 1 350px' }} id="suscripcion">
+            <div className="card" style={{ padding: '2rem' }}>
+              <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>Recibe Alertas</h3>
+              <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                Configura tus preferencias para recibir avisos viales de tus zonas frecuentes.
+              </p>
+
+              {subscribed ? (
+                <div style={{ 
+                  backgroundColor: 'rgba(3, 169, 236, 0.1)', 
+                  color: 'var(--color-secondary)', 
+                  padding: '1.5rem', 
+                  borderRadius: 'var(--radius-md)', 
+                  textAlign: 'center',
+                  fontWeight: '600'
+                }}>
+                  ¡Suscripción exitosa!<br/>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 'normal' }}>Verifica tu bandeja de entrada.</span>
+                </div>
+              ) : (
+                <form onSubmit={handleSubscribe}>
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Correo Electrónico</label>
+                    <input 
+                      type="email" 
+                      className="form-input" 
+                      placeholder="logistica@empresa.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </div>
+                  
+                  <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Provincia de Interés</label>
+                    <select 
+                      className="form-select" 
+                      value={provincia}
+                      onChange={(e) => setProvincia(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      <option value="">Selecciona una provincia...</option>
+                      <option value="madrid">Madrid</option>
+                      <option value="barcelona">Barcelona</option>
+                      <option value="valencia">Valencia</option>
+                      <option value="sevilla">Sevilla</option>
+                      <option value="todas">Toda España</option>
+                    </select>
+                  </div>
+                  
+                  <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }} disabled={loadingSub}>
+                    {loadingSub ? 'Enviando...' : 'Activar Alertas'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <main className="container" style={{ marginTop: '3rem' }}>
+        
+        {/* Estadísticas Rápidas */}
+        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button className="btn btn-outline" onClick={fetchPlanificadas} disabled={loadingPlanificadas}>
               {loadingPlanificadas ? 'Cargando...' : 'Actualizar Planificadas'}
@@ -138,20 +274,15 @@ function App() {
               {loading ? 'Actualizando...' : 'Actualizar Activas'}
             </button>
           </div>
-        </div>
-      </header>
-
-      <main className="container" style={{ marginTop: '3rem' }}>
-        
-        {/* Estadísticas Rápidas */}
-        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem' }}>
-          <div className="card" style={{ flex: 1, padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid #16a34a' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1 }}>{planificadas.length}</div>
-            <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Restricciones Planificadas</div>
-          </div>
-          <div className="card" style={{ flex: 1, padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--color-danger)' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1 }}>{incidencias.length}</div>
-            <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Incidencias Activas Hoy</div>
+          <div style={{ display: 'flex', gap: '1.5rem', flex: 1, marginLeft: '2rem' }}>
+            <div className="card" style={{ flex: 1, padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid #16a34a' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1 }}>{planificadas.length}</div>
+              <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Restricciones Planificadas</div>
+            </div>
+            <div className="card" style={{ flex: 1, padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid var(--color-danger)' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1 }}>{incidencias.length}</div>
+              <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Incidencias Activas Hoy</div>
+            </div>
           </div>
         </div>
 

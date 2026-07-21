@@ -328,15 +328,7 @@ function App() {
         
         {/* Estadísticas Rápidas */}
         <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button className="btn btn-outline" onClick={fetchPlanificadas} disabled={loadingPlanificadas}>
-              {loadingPlanificadas ? 'Cargando...' : 'Actualizar Planificadas'}
-            </button>
-            <button className="btn btn-primary" onClick={fetchIncidencias} disabled={loading}>
-              {loading ? 'Actualizando...' : 'Actualizar Activas'}
-            </button>
-          </div>
-          <div style={{ display: 'flex', gap: '1.5rem', flex: 1, marginLeft: '2rem' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', flex: 1 }}>
             <div className="card" style={{ flex: 1, padding: '1.5rem', textAlign: 'center', borderBottom: '4px solid #16a34a' }}>
               <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1 }}>{planificadas.length}</div>
               <div className="text-muted" style={{ marginTop: '0.5rem', fontWeight: 500 }}>Restricciones Planificadas</div>

@@ -101,6 +101,23 @@ export default async function handler(request, response) {
        
        // Borrar planificaciones anteriores
        const oldDocs = await colRef.get();
+       
+       // Detectar si hay modificaciones comparando un hash/string simple de las restricciones
+       const oldRestriccionesStr = oldDocs.docs.map(d => {
+           const data = d.data();
+           return `${data.carretera}-${data.municipio_inicio}-${data.fecha_texto}-${data.duracion}`;
+       }).sort().join('|');
+       
+       const newRestriccionesStr = restricciones.map(r => 
+           `${r.carretera}-${r.municipio_inicio}-${r.fecha_texto}-${r.duracion}`
+       ).sort().join('|');
+
+       // Es una actualización si ya había datos antes y el contenido del excel ha cambiado
+       const isUpdated = oldDocs.size > 0 && oldRestriccionesStr !== newRestriccionesStr;
+       if (isUpdated) {
+           console.log('Se han detectado modificaciones nuevas en el Excel de la DGT.');
+       }
+
        const deleteBatch = db.batch();
        oldDocs.docs.forEach((doc) => {
            deleteBatch.delete(doc.ref);
@@ -151,10 +168,8 @@ export default async function handler(request, response) {
                });
            }
 
-           // Solo enviamos si hay al menos una restricción que le afecte (o si eligió Todas)
-           if (userRestricciones.length > 0) {
-               promesasCorreos.push(sendPlanningEmail(userData.email, userRestricciones));
-           }
+           // Ahora enviamos SIEMPRE, incluso si no hay restricciones que le afecten
+           promesasCorreos.push(sendPlanningEmail(userData.email, userRestricciones, isUpdated));
          });
          
          await Promise.all(promesasCorreos);

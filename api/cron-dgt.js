@@ -1,21 +1,20 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { sendAlertEmail } from './utils/mailer.js';
+import { sendBatchAlertEmail } from './utils/mailer.js';
 import { obtenerIncidenciasReales } from './utils/robot-dgt.js';
 import geoMap from './utils/geo-map.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Aumentar el límite de tiempo en Vercel (Puppeteer tarda en arrancar)
+// Aumentar el límite de tiempo en Vercel
 export const maxDuration = 60;
 
-// Inicializar Firebase Admin (Patrón Singleton para entornos Serverless)
+// Inicializar Firebase Admin
 function getDb() {
   if (getApps().length === 0) {
     try {
       let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
-      // Limpiar comillas si Vercel las guardó por error
       if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
         privateKey = privateKey.slice(1, -1);
       }
@@ -36,7 +35,6 @@ function getDb() {
 }
 
 export default async function handler(request, response) {
-  // Opcional: Proteger el endpoint con un Secret Token (útil si usamos cron-job.org)
   const authHeader = request.headers.authorization;
   const querySecret = request.query?.secret;
   
@@ -46,42 +44,39 @@ export default async function handler(request, response) {
 
   try {
     const db = getDb();
-    console.log('Iniciando sincronización con el Robot de Consulta...');
+    console.log('Iniciando sincronización BATCH con el Robot de Consulta DGT...');
     
-    // 1. Ejecutar el robot para extraer incidencias reales
+    // 1. Ejecutar el robot
     const dgtData = await obtenerIncidenciasReales();
     
     if (dgtData === null) {
-      console.log('Aviso: La API de Euskadi falló o dio timeout en esta ejecución.');
-      return response.status(200).json({ 
-        success: true, // Se mantiene success:true para que Cron-job lo marque en verde
-        message: 'Ejecución completada, pero la API de origen (Euskadi) está caída o lenta. Reintentará en el próximo ciclo.' 
-      });
+      console.log('Aviso: La API de la DGT falló o dio timeout.');
+      return response.status(200).json({ success: true, message: 'La API de la DGT está caída o lenta.' });
     }
 
     if (dgtData.length === 0) {
-      console.log('No se encontraron incidencias activas en esta ejecución.');
-      return response.status(200).json({ success: true, message: 'Sin incidencias nuevas' });
+      return response.status(200).json({ success: true, message: 'Sin incidencias activas en España' });
     }
 
-    let correosEnviados = 0;
+    // 2. Precargar las incidencias ya procesadas en UNA SOLA consulta (evitar Timeout)
+    const processedSnapshot = await db.collection('processed_incidents').get();
+    const processedIds = new Set();
+    processedSnapshot.forEach(doc => processedIds.add(doc.id));
 
     // Precargar las planificadas para el cross-reference
     const plannedSnapshot = await db.collection('planned_restrictions').get();
     const planificadas = [];
     plannedSnapshot.forEach(doc => planificadas.push(doc.data()));
 
-    // 2. Procesar cada incidencia entrante
-    for (const incidencia of dgtData) {
-      // Verificar si ya la procesamos (evitar SPAM)
-      const incRef = db.collection('processed_incidents').doc(incidencia.id_incidencia);
-      const doc = await incRef.get();
+    // 3. Filtrar cuáles son realmente NUEVAS y relevantes (Pesados o Planificadas)
+    const nuevasRelevantes = [];
+    const todosLosNuevosIds = [];
 
-      if (!doc.exists) {
-        // La incidencia es NUEVA
-        console.log(`Nueva incidencia detectada: ${incidencia.id_incidencia}`);
+    for (const incidencia of dgtData) {
+      if (!processedIds.has(incidencia.id_incidencia)) {
+        todosLosNuevosIds.push(incidencia);
         
-        // 3. Cruzar datos heurísticos
+        // Determinar si es relevante
         const desc = (incidencia.descripcion || '').toLowerCase();
         const tipo = (incidencia.tipo || '').toLowerCase();
         const isPesados = desc.includes('pesados') || desc.includes('camion') || 
@@ -89,54 +84,81 @@ export default async function handler(request, response) {
         
         const isPlanificada = planificadas.some(plan => {
           if (plan.carretera !== incidencia.carretera) return false;
-          
           const cleanMuni = (plan.municipio_inicio || '').split('(')[0].trim().toLowerCase();
           const mappedProvincia = geoMap[cleanMuni] || '';
           const incProv = (incidencia.provincia || '').toLowerCase();
-          
           return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
         });
 
-        if (isPlanificada) {
-          console.log(`¡MATCH PREDICTIVO! La incidencia ${incidencia.id_incidencia} estaba planificada.`);
-        }
-
-        // SOLO ENVIAR CORREOS SI ES PESADOS O PLANIFICADA
         if (isPesados || isPlanificada) {
-          // 4. Buscar usuarios interesados en esta provincia o en "Toda España"
-          const usersSnapshot = await db.collection('users_subscriptions')
-            .where('provincias', 'array-contains-any', [incidencia.provincia.toLowerCase(), 'todas'])
-            .get();
-
-          if (!usersSnapshot.empty) {
-            // 5. Enviar correos a los afectados
-            const promesasCorreos = [];
-            usersSnapshot.forEach(userDoc => {
-              const userData = userDoc.data();
-              promesasCorreos.push(sendAlertEmail(userData.email, incidencia, isPlanificada));
-            });
-
-            await Promise.all(promesasCorreos);
-            correosEnviados += promesasCorreos.length;
-          }
+           incidencia.isPesados = isPesados;
+           incidencia.isPlanificada = isPlanificada;
+           nuevasRelevantes.push(incidencia);
         }
-
-        // 5. Marcar la incidencia como procesada en Firestore
-        await incRef.set({
-          procesada_en: FieldValue.serverTimestamp(),
-          provincia: incidencia.provincia
-        });
       }
     }
 
-    // 6. Limpiar incidencias que ya han sido resueltas
-    const processedSnapshot = await db.collection('processed_incidents').get();
-    const activeIds = dgtData.map(inc => inc.id_incidencia);
+    console.log(`Resumen: ${todosLosNuevosIds.length} incidencias nuevas totales. ${nuevasRelevantes.length} son relevantes (Pesados/Planificadas).`);
+
+    let correosEnviados = 0;
+
+    // 4. Si hay nuevas relevantes, agrupar por usuario y enviar BATCH emails
+    if (nuevasRelevantes.length > 0) {
+      const usersSnapshot = await db.collection('users_subscriptions').get();
+      const promesasCorreos = [];
+
+      usersSnapshot.forEach(userDoc => {
+        const userData = userDoc.data();
+        const provinciasSubscritas = userData.provincias || [];
+        
+        // Filtrar las incidencias relevantes para ESTE usuario
+        const incidenciasParaUsuario = nuevasRelevantes.filter(inc => {
+          const provLow = (inc.provincia || '').toLowerCase();
+          return provinciasSubscritas.includes('todas') || provinciasSubscritas.includes(provLow);
+        });
+
+        // Si hay al menos una, enviar 1 SOLO CORREO con todas
+        if (incidenciasParaUsuario.length > 0) {
+           promesasCorreos.push(sendBatchAlertEmail(userData.email, incidenciasParaUsuario));
+        }
+      });
+
+      if (promesasCorreos.length > 0) {
+         await Promise.all(promesasCorreos);
+         correosEnviados = promesasCorreos.length;
+         console.log(`Se han enviado ${correosEnviados} correos agrupados (batch).`);
+      }
+    }
+
+    // 5. Guardar TODAS las incidencias nuevas en Firestore usando BATCH (lotes de 500)
+    // Esto es muy rápido y evita timeouts.
+    if (todosLosNuevosIds.length > 0) {
+      const chunks = [];
+      for (let i = 0; i < todosLosNuevosIds.length; i += 400) {
+        chunks.push(todosLosNuevosIds.slice(i, i + 400));
+      }
+
+      for (const chunk of chunks) {
+        const batch = db.batch();
+        chunk.forEach(inc => {
+          const ref = db.collection('processed_incidents').doc(inc.id_incidencia);
+          batch.set(ref, {
+            procesada_en: FieldValue.serverTimestamp(),
+            provincia: inc.provincia
+          });
+        });
+        await batch.commit();
+      }
+      console.log(`Se guardaron ${todosLosNuevosIds.length} incidencias nuevas en Firestore.`);
+    }
+
+    // 6. Limpiar incidencias que ya no existen (resueltas)
+    const activeIds = new Set(dgtData.map(inc => inc.id_incidencia));
     const deleteBatch = db.batch();
     let deletedCount = 0;
     
     processedSnapshot.docs.forEach(doc => {
-      if (!activeIds.includes(doc.id)) {
+      if (!activeIds.has(doc.id) && deletedCount < 400) { // Límite de batch
         deleteBatch.delete(doc.ref);
         deletedCount++;
       }
@@ -149,12 +171,13 @@ export default async function handler(request, response) {
 
     return response.status(200).json({ 
       success: true, 
-      message: 'Sincronización completada', 
-      correos_enviados: correosEnviados 
+      message: 'Sincronización BATCH completada', 
+      correos_enviados: correosEnviados,
+      nuevas_procesadas: todosLosNuevosIds.length
     });
 
   } catch (error) {
-    console.error('Error en cron-job:', error);
+    console.error('Error en cron-job batch:', error);
     return response.status(500).json({ error: 'Error interno del servidor' });
   }
 }

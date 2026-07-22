@@ -362,7 +362,7 @@ function App() {
         </div>
       </section>
 
-      <main className="container" style={{ marginTop: '3rem' }}>
+      <main className="container-fluid" style={{ marginTop: '3rem' }}>
         
         {/* Estadísticas Rápidas */}
         <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem', justifyContent: 'space-between', alignItems: 'center' }}>

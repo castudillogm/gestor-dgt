@@ -379,10 +379,10 @@ function App() {
         </div>
 
         {/* Panel Dividido para Planificadas vs Activas */}
-        <div id="alertas" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'flex-start' }}>
+        <div id="alertas" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem', alignItems: 'start' }}>
           
           {/* Columna Izquierda: Planificadas */}
-          <div id="planificadas" style={{ flex: '1 1 350px' }}>
+          <div id="planificadas" style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Restricciones Planificadas</h3>
                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -469,7 +469,7 @@ function App() {
           </div>
 
           {/* Columna Derecha: Activas */}
-          <div style={{ flex: '1 1 350px' }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h3 style={{ fontSize: '1.5rem', color: 'var(--color-primary)', margin: 0 }}>Restricciones Activas</h3>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>

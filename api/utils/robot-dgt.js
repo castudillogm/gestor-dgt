@@ -100,6 +100,6 @@ export async function obtenerIncidenciasReales() {
 
   } catch (error) {
     console.error('🤖 Robot Error:', error.message);
-    return []; // En caso de error, devolver vacío para no romper la app
+    return null; // En caso de error, devolvemos null para diferenciarlo de un array vacío
   }
 }

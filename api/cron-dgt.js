@@ -51,7 +51,15 @@ export default async function handler(request, response) {
     // 1. Ejecutar el robot para extraer incidencias reales
     const dgtData = await obtenerIncidenciasReales();
     
-    if (!dgtData || dgtData.length === 0) {
+    if (dgtData === null) {
+      console.log('Aviso: La API de Euskadi falló o dio timeout en esta ejecución.');
+      return response.status(200).json({ 
+        success: true, // Se mantiene success:true para que Cron-job lo marque en verde
+        message: 'Ejecución completada, pero la API de origen (Euskadi) está caída o lenta. Reintentará en el próximo ciclo.' 
+      });
+    }
+
+    if (dgtData.length === 0) {
       console.log('No se encontraron incidencias activas en esta ejecución.');
       return response.status(200).json({ success: true, message: 'Sin incidencias nuevas' });
     }

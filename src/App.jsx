@@ -433,35 +433,37 @@ function App() {
             
 
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ overflowX: 'auto', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
               {loadingPlanificadas ? (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando planificación...</div>
               ) : planificadasFiltradas.length === 0 ? (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No hay restricciones planificadas para los filtros seleccionados.</div>
               ) : (
-                planificadasFiltradas.map((plan, idx) => (
-                  <div key={idx} className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #16a34a' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                       <span className="badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#16a34a' }}>PLANIFICADA</span>
-                       <span className="text-muted" style={{ fontSize: '0.85rem' }}>{plan.fecha_texto}</span>
-                    </div>
-                    <h4 style={{ fontSize: '1.15rem', marginBottom: '0.5rem' }}>
-                      <strong style={{ color: 'var(--color-primary)' }}>Ctra: </strong>
-                      <span style={{ color: 'var(--color-secondary)' }}>{plan.carretera}</span> 
-                      <span style={{ margin: '0 8px', color: '#ccc' }}>|</span>
-                      <strong style={{ color: 'var(--color-primary)' }}>P.K.: </strong>
-                      <span style={{ color: 'var(--color-secondary)' }}>{plan.pk_inicio !== null ? plan.pk_inicio : 'N/A'}{plan.pk_fin !== null ? ` al ${plan.pk_fin}` : ''}</span>
-                    </h4>
-                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>
-                      <strong style={{ color: 'var(--color-primary)' }}>Población: </strong>
-                      {plan.municipio_inicio || 'N/A'}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '0.9rem', padding: '0.5rem', backgroundColor: 'var(--color-surface)', borderRadius: '4px' }}>
-                      <strong>Sentido:</strong> {plan.sentido || 'Ambos'} &nbsp;|&nbsp; 
-                      <strong>Horario:</strong> {plan.duracion || 'Todo el día'}
-                    </p>
-                  </div>
-                ))
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                  <thead style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                    <tr>
+                      <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Fecha</th>
+                      <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Carretera (P.K.)</th>
+                      <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Población</th>
+                      <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Sentido</th>
+                      <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Horario</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {planificadasFiltradas.map((plan, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: idx % 2 === 0 ? 'white' : '#f8fafc' }}>
+                        <td style={{ padding: '0.75rem 1rem', whiteSpace: 'nowrap' }}>{plan.fecha_texto}</td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <strong>{plan.carretera}</strong> 
+                          <br/><span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{plan.pk_inicio !== null ? plan.pk_inicio : 'N/A'}{plan.pk_fin !== null ? ` al ${plan.pk_fin}` : ''}</span>
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>{plan.municipio_inicio || 'N/A'}</td>
+                        <td style={{ padding: '0.75rem 1rem' }}>{plan.sentido || 'Ambos'}</td>
+                        <td style={{ padding: '0.75rem 1rem' }}>{plan.duracion || 'Todo el día'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
@@ -530,7 +532,7 @@ function App() {
               </div>
             </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ overflowX: 'auto', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
             {loading ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                 Cargando incidencias reales en vivo...
@@ -540,53 +542,47 @@ function App() {
                 No se han detectado incidencias activas.
               </div>
             ) : (
-              incidenciasFiltradas.map((incidencia) => (
-                <div key={incidencia.id_incidencia} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--color-danger)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span className={`badge ${getBadgeClass(incidencia.tipo)}`}>
-                        {incidencia.tipo ? incidencia.tipo.replace('_', ' ') : 'Alerta'}
-                      </span>
-                      {incidencia.isPesados && (
-                        <span className="badge badge-primary">V.H PESADOS</span>
-                      )}
-                      {incidencia.isPlanificada && (
-                        <span className="badge badge-danger">PLAN ACTIVADA</span>
-                      )}
-                    </div>
-                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>{incidencia.id_incidencia}</span>
-                  </div>
-                  
-                  <h4 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                    <strong style={{ color: 'var(--color-primary)' }}>Ctra: </strong>
-                    <span style={{ color: 'var(--color-secondary)' }}>{incidencia.carretera}</span> 
-                    <span style={{ color: 'var(--color-text-muted)', margin: '0 8px' }}>|</span> 
-                    <strong style={{ color: 'var(--color-primary)' }}>Ciudad: </strong>
-                    {incidencia.ciudad || 'N/A'}
-                  </h4>
-                  
-                  <p style={{ margin: '0 0 1rem 0' }}>{incidencia.descripcion}</p>
-                  
-                  <div style={{ 
-                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', 
-                    backgroundColor: 'var(--color-surface)', padding: '1rem', borderRadius: 'var(--radius-md)',
-                    fontSize: '0.9rem'
-                  }}>
-                    <div>
-                      <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Tramo:</strong>
-                      Km {incidencia.tramo?.km_inicio} al {incidencia.tramo?.km_fin} ({incidencia.tramo?.sentido})
-                    </div>
-                    <div>
-                      <strong style={{ display: 'block', color: 'var(--color-primary)' }}>Provincia:</strong>
-                      {incidencia.provincia}
-                    </div>
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <strong style={{ display: 'inline-block', color: 'var(--color-primary)', marginRight: '0.5rem' }}>Período:</strong>
-                      {new Date(incidencia.periodo?.inicio).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })} - {new Date(incidencia.periodo?.fin).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
-                    </div>
-                  </div>
-                </div>
-              ))
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                  <tr>
+                    <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Alerta</th>
+                    <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Carretera (Tramo)</th>
+                    <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Prov. / Ciudad</th>
+                    <th style={{ padding: '0.75rem 1rem', color: 'var(--color-primary)' }}>Descripción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {incidenciasFiltradas.map((incidencia, idx) => (
+                    <tr key={incidencia.id_incidencia || idx} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: idx % 2 === 0 ? 'white' : '#f8fafc' }}>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span className={`badge ${getBadgeClass(incidencia.tipo)}`} style={{ alignSelf: 'flex-start' }}>
+                            {incidencia.tipo ? incidencia.tipo.replace('_', ' ') : 'Alerta'}
+                          </span>
+                          {incidencia.isPesados && <span className="badge badge-primary" style={{ alignSelf: 'flex-start' }}>PESADOS</span>}
+                          {incidencia.isPlanificada && <span className="badge badge-danger" style={{ alignSelf: 'flex-start' }}>PLAN ACTIVADA</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <strong>{incidencia.carretera}</strong>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                          Km {incidencia.tramo?.km_inicio} a {incidencia.tramo?.km_fin} ({incidencia.tramo?.sentido})
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <strong>{incidencia.provincia}</strong>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{incidencia.ciudad || 'N/A'}</div>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', maxWidth: '300px' }}>
+                        <div style={{ marginBottom: '0.25rem', fontSize: '0.85rem' }}>{incidencia.descripcion}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                          {new Date(incidencia.periodo?.inicio).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })} - {new Date(incidencia.periodo?.fin).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>

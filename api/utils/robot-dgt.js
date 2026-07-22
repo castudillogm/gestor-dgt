@@ -6,7 +6,7 @@ export async function obtenerIncidenciasReales() {
     
     // Forzamos IPv4 en Vercel para evitar bloqueos por IPv6 en servidores gubernamentales
     const data = await new Promise((resolve, reject) => {
-      https.get('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20', { family: 4, rejectUnauthorized: false }, (res) => {
+      const req = https.get('https://api.euskadi.eus/traffic/v1.0/incidences?_elements=20', { family: 4, rejectUnauthorized: false, timeout: 10000 }, (res) => {
         let body = '';
         res.on('data', chunk => body += chunk);
         res.on('end', () => {
@@ -17,7 +17,14 @@ export async function obtenerIncidenciasReales() {
             reject(e);
           }
         });
-      }).on('error', reject);
+      });
+      
+      req.on('error', reject);
+      
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Timeout de 10s: La API de Euskadi no respondió a tiempo.'));
+      });
     });
     
     // Transformamos los datos al formato genérico de nuestro sistema

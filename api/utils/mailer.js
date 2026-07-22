@@ -152,23 +152,20 @@ export const sendWelcomeEmail = async (to, provincia) => {
  * Envia el reporte semanal predictivo
  */
 export const sendPlanningEmail = async (to, restricciones, isUpdated = false) => {
+  if (!restricciones || restricciones.length === 0) return false;
+
   const subjectPrefix = isUpdated ? "[Actualización] " : "";
   const headerBadge = isUpdated 
     ? `<span style="background-color: #ff9800; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; vertical-align: middle; margin-left: 10px;">ACTUALIZACIÓN</span>` 
     : "";
 
-  let htmlList = "";
-  if (restricciones && restricciones.length > 0) {
-    htmlList = restricciones.map(r => `
-      <li style="margin-bottom: 10px;">
-        <strong>Día:</strong> ${r.fecha_texto} <br/>
-        <strong>Carretera:</strong> ${r.carretera} (Población: ${r.municipio_inicio || 'N/A'}) <br/>
-        <strong>Horario:</strong> ${r.duracion || 'Todo el día'} - Sentido: ${r.sentido || 'Ambos'}
-      </li>
-    `).join('');
-  } else {
-    htmlList = `<p style="color: #16a34a; font-weight: bold; text-align: center;">🎉 No hay restricciones planificadas que afecten a tus rutas esta semana.</p>`;
-  }
+  const htmlList = restricciones.map(r => `
+    <li style="margin-bottom: 10px;">
+      <strong>Día:</strong> ${r.fecha_texto} <br/>
+      <strong>Carretera:</strong> ${r.carretera} (Población: ${r.municipio_inicio || 'N/A'}) <br/>
+      <strong>Horario:</strong> ${r.duracion || 'Todo el día'} - Sentido: ${r.sentido || 'Ambos'}
+    </li>
+  `).join('');
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -193,13 +190,13 @@ export const sendPlanningEmail = async (to, restricciones, isUpdated = false) =>
         </div>
         <div class="content">
           <h2 class="title">Resumen Semanal Predictivo (DGT) ${headerBadge}</h2>
-          ${restricciones && restricciones.length > 0 ? '<p>Hemos detectado las siguientes restricciones para vehículos pesados programadas por la DGT esta semana que podrían afectar tus rutas habituales:</p>' : ''}
+          <p>Hemos detectado las siguientes restricciones para vehículos pesados programadas por la DGT esta semana que podrían afectar tus rutas habituales:</p>
           <div class="info-box">
-            <ul style="padding-left: 15px; margin: 0; list-style: ${restricciones && restricciones.length > 0 ? 'disc' : 'none'};">
+            <ul style="padding-left: 15px; margin: 0;">
               ${htmlList}
             </ul>
           </div>
-          ${restricciones && restricciones.length > 0 ? '<p>Si alguna de estas restricciones se activa en tiempo real, recibirás una alerta adicional.</p>' : ''}
+          <p>Si alguna de estas restricciones se activa en tiempo real, recibirás una alerta adicional.</p>
         </div>
         <div class="footer">
           © ${new Date().getFullYear()} GrupaMar Transporte y Logística. Este es un correo automático.
@@ -210,11 +207,10 @@ export const sendPlanningEmail = async (to, restricciones, isUpdated = false) =>
   `;
 
   try {
-    const numRestricciones = restricciones ? restricciones.length : 0;
     const mailOptions = {
       from: `"Alertas GrupaMar" <${process.env.SMTP_USER}>`,
       to,
-      subject: `${subjectPrefix}Planificación DGT: ${numRestricciones} restricciones en tus rutas`,
+      subject: `${subjectPrefix}Planificación DGT Semanal: ${restricciones.length} restricciones próximas`,
       html: htmlContent,
     };
 

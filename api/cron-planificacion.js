@@ -168,8 +168,10 @@ export default async function handler(request, response) {
                });
            }
 
-           // Ahora enviamos SIEMPRE, incluso si no hay restricciones que le afecten
-           promesasCorreos.push(sendPlanningEmail(userData.email, userRestricciones, isUpdated));
+           // Solo enviamos si hay al menos una restricción que le afecte (o si eligió Todas)
+           if (userRestricciones.length > 0) {
+               promesasCorreos.push(sendPlanningEmail(userData.email, userRestricciones, isUpdated));
+           }
          });
          
          await Promise.all(promesasCorreos);

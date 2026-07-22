@@ -2,6 +2,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { sendAlertEmail } from './utils/mailer.js';
 import { obtenerIncidenciasReales } from './utils/robot-dgt.js';
+import geoMap from './utils/geo-map.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

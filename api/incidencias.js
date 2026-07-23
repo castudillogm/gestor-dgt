@@ -59,10 +59,18 @@ export default async function handler(request, response) {
         
         // 2. Coincide provincia (Validación geográfica)
         const cleanMuni = (plan.municipio_inicio || '').split('(')[0].trim().toLowerCase();
-        const mappedProvincia = geoMap[cleanMuni] || '';
+        const mappedProvincia = geoMap[cleanMuni];
         const incProv = (inc.provincia || '').toLowerCase();
+        const incCiudad = (inc.ciudad || '').toLowerCase();
         
-        return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
+        if (mappedProvincia) {
+          return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
+        } else {
+          // Si no está mapeada la provincia, no podemos asumir true.
+          // Comprobamos si la ciudad coincide, y si no, evitamos el falso positivo.
+          if (!cleanMuni || cleanMuni === 'n/a') return false;
+          return incCiudad.includes(cleanMuni) || cleanMuni.includes(incCiudad);
+        }
       });
 
       return {

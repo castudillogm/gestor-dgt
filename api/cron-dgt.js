@@ -85,9 +85,16 @@ export default async function handler(request, response) {
         const isPlanificada = planificadas.some(plan => {
           if (plan.carretera !== incidencia.carretera) return false;
           const cleanMuni = (plan.municipio_inicio || '').split('(')[0].trim().toLowerCase();
-          const mappedProvincia = geoMap[cleanMuni] || '';
+          const mappedProvincia = geoMap[cleanMuni];
           const incProv = (incidencia.provincia || '').toLowerCase();
-          return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
+          const incCiudad = (incidencia.ciudad || '').toLowerCase();
+          
+          if (mappedProvincia) {
+            return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
+          } else {
+            if (!cleanMuni || cleanMuni === 'n/a') return false;
+            return incCiudad.includes(cleanMuni) || cleanMuni.includes(incCiudad);
+          }
         });
 
         if (isPesados || isPlanificada) {

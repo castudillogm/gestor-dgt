@@ -77,11 +77,6 @@ export default async function handler(request, response) {
         todosLosNuevosIds.push(incidencia);
         
         // Determinar si es relevante
-        const desc = (incidencia.descripcion || '').toLowerCase();
-        const tipo = (incidencia.tipo || '').toLowerCase();
-        const isPesados = desc.includes('pesados') || desc.includes('camion') || 
-                          desc.includes('camión') || desc.includes('mercanc') || desc.includes('adr');
-        
         const isPlanificada = planificadas.some(plan => {
           if (plan.carretera !== incidencia.carretera) return false;
           const cleanMuni = (plan.municipio_inicio || '').split('(')[0].trim().toLowerCase();
@@ -96,6 +91,13 @@ export default async function handler(request, response) {
             return incCiudad.includes(cleanMuni) || cleanMuni.includes(incCiudad);
           }
         });
+
+        const desc = (incidencia.descripcion || '').toLowerCase();
+        const tipo = (incidencia.tipo || '').toLowerCase();
+        let isPesados = incidencia.isPesadosOriginal || desc.includes('pesados') || desc.includes('camion') || 
+                          desc.includes('camión') || desc.includes('mercanc') || desc.includes('adr');
+        
+        if (isPlanificada) isPesados = true;
 
         if (isPesados || isPlanificada) {
            incidencia.isPesados = isPesados;

@@ -46,13 +46,7 @@ export default async function handler(request, response) {
 
     // Cruzar datos
     const enhancedIncidencias = rawData.map(inc => {
-      // Validar si es para pesados
-      const desc = (inc.descripcion || '').toLowerCase();
-      const tipo = (inc.tipo || '').toLowerCase();
-      const isPesados = desc.includes('pesados') || desc.includes('camion') || 
-                        desc.includes('camión') || desc.includes('mercanc') || desc.includes('adr');
-      
-      // Validar si está planificada
+      // Validar si está planificada primero
       const isPlanificada = planificadas.some(plan => {
         // 1. Coincide carretera
         if (plan.carretera !== inc.carretera) return false;
@@ -72,6 +66,14 @@ export default async function handler(request, response) {
           return incCiudad.includes(cleanMuni) || cleanMuni.includes(incCiudad);
         }
       });
+
+      // Validar si es para pesados (usando flag original, descripción, o si es planificada)
+      const desc = (inc.descripcion || '').toLowerCase();
+      const tipo = (inc.tipo || '').toLowerCase();
+      let isPesados = inc.isPesadosOriginal || desc.includes('pesados') || desc.includes('camion') || 
+                        desc.includes('camión') || desc.includes('mercanc') || desc.includes('adr');
+      
+      if (isPlanificada) isPesados = true;
 
       return {
         ...inc,

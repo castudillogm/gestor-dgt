@@ -106,6 +106,23 @@ export async function obtenerIncidenciasReales() {
            if (causeType) descripcion = `Causa: ${causeType} en ${carretera}.`;
         }
 
+        // Extraer si afecta a vehículos pesados explícitamente desde las características del vehículo
+        let isPesadosOriginal = false;
+        const vehChars = rec['sit:forVehiclesWithCharacteristicsOf'];
+        if (vehChars) {
+           const charArray = Array.isArray(vehChars) ? vehChars : [vehChars];
+           charArray.forEach(c => {
+             let vType = c['com:vehicleType']?.[0];
+             if (typeof vType === 'object' && vType._) vType = vType._;
+             if (typeof vType === 'string') {
+               vType = vType.toLowerCase();
+               if (vType.includes('heavy') || vType.includes('goods') || vType.includes('articulated') || vType.includes('dangerous')) {
+                  isPesadosOriginal = true;
+               }
+             }
+           });
+        }
+
         return {
           id_incidencia,
           tipo,
@@ -121,7 +138,8 @@ export async function obtenerIncidenciasReales() {
             inicio: startTime, 
             fin: endTime 
           },
-          descripcion
+          descripcion,
+          isPesadosOriginal
         };
       } catch (e) {
         console.error("Error parseando incidencia individual", e);

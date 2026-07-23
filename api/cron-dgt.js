@@ -102,7 +102,29 @@ export default async function handler(request, response) {
 
     let correosEnviados = 0;
 
-    // 4. Si hay nuevas relevantes, agrupar por usuario y enviar BATCH emails
+    // 4. Guardar TODAS las incidencias nuevas en Firestore usando BATCH (lotes de 500)
+    // HACER ESTO ANTES DE ENVIAR CORREOS para que si Vercel da timeout, no se repitan los correos en el próximo ciclo.
+    if (todosLosNuevosIds.length > 0) {
+      const chunks = [];
+      for (let i = 0; i < todosLosNuevosIds.length; i += 400) {
+        chunks.push(todosLosNuevosIds.slice(i, i + 400));
+      }
+
+      for (const chunk of chunks) {
+        const batch = db.batch();
+        chunk.forEach(inc => {
+          const ref = db.collection('processed_incidents').doc(inc.id_incidencia);
+          batch.set(ref, {
+            procesada_en: FieldValue.serverTimestamp(),
+            provincia: inc.provincia
+          });
+        });
+        await batch.commit();
+      }
+      console.log(`Se guardaron ${todosLosNuevosIds.length} incidencias nuevas en Firestore.`);
+    }
+
+    // 5. Si hay nuevas relevantes, agrupar por usuario y enviar BATCH emails
     if (nuevasRelevantes.length > 0) {
       const usersSnapshot = await db.collection('users_subscriptions').get();
       const promesasCorreos = [];
@@ -128,28 +150,6 @@ export default async function handler(request, response) {
          correosEnviados = promesasCorreos.length;
          console.log(`Se han enviado ${correosEnviados} correos agrupados (batch).`);
       }
-    }
-
-    // 5. Guardar TODAS las incidencias nuevas en Firestore usando BATCH (lotes de 500)
-    // Esto es muy rápido y evita timeouts.
-    if (todosLosNuevosIds.length > 0) {
-      const chunks = [];
-      for (let i = 0; i < todosLosNuevosIds.length; i += 400) {
-        chunks.push(todosLosNuevosIds.slice(i, i + 400));
-      }
-
-      for (const chunk of chunks) {
-        const batch = db.batch();
-        chunk.forEach(inc => {
-          const ref = db.collection('processed_incidents').doc(inc.id_incidencia);
-          batch.set(ref, {
-            procesada_en: FieldValue.serverTimestamp(),
-            provincia: inc.provincia
-          });
-        });
-        await batch.commit();
-      }
-      console.log(`Se guardaron ${todosLosNuevosIds.length} incidencias nuevas en Firestore.`);
     }
 
     // 6. Limpiar incidencias que ya no existen (resueltas)

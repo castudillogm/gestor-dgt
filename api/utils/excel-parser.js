@@ -46,6 +46,7 @@ export function parseDgtExcel(buffer) {
              const duracionCell = cleanRow[duracionCellIndex];
              let ctra = null;
              let inicioMuni = null;
+             let finMuni = null;
              let pkInicio = null;
              let pkFin = null;
 
@@ -57,25 +58,31 @@ export function parseDgtExcel(buffer) {
                  pkInicio = !isNaN(Number(cleanRow[1])) ? cleanRow[1] : null;
                  inicioMuni = typeof cleanRow[1] === 'string' && isNaN(Number(cleanRow[1])) ? cleanRow[1] : cleanRow[2];
                  pkFin = !isNaN(Number(cleanRow[3])) ? cleanRow[3] : null;
+                 finMuni = typeof cleanRow[3] === 'string' && isNaN(Number(cleanRow[3])) ? cleanRow[3] : cleanRow[4];
              } else if (!firstCell && lastCtra) {
                  // Si la carretera está en blanco (merge de Excel) hereda la anterior
                  ctra = lastCtra;
                  pkInicio = !isNaN(Number(cleanRow[0])) ? cleanRow[0] : null;
                  inicioMuni = typeof cleanRow[0] === 'string' && isNaN(Number(cleanRow[0])) ? cleanRow[0] : cleanRow[1];
                  pkFin = !isNaN(Number(cleanRow[2])) ? cleanRow[2] : null;
+                 finMuni = typeof cleanRow[2] === 'string' && isNaN(Number(cleanRow[2])) ? cleanRow[2] : cleanRow[3];
              }
 
              const sentido = cleanRow[cleanRow.length - 1]; // Usualmente el último
+             
+             if (finMuni === duracionCell || finMuni === sentido) finMuni = null;
+             if (inicioMuni === duracionCell || inicioMuni === sentido) inicioMuni = null;
 
              if (ctra) {
                  plannedRestrictions.push({
                    fecha_texto: currentDate,
                    carretera: ctra,
                    municipio_inicio: inicioMuni || 'Desconocido',
+                   municipio_fin: finMuni || '',
                    pk_inicio: pkInicio,
                    pk_fin: pkFin,
                    duracion: duracionCell,
-                   sentido: sentido
+                   sentido: sentido || ''
                  });
              }
           }

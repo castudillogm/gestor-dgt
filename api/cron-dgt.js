@@ -79,16 +79,27 @@ export default async function handler(request, response) {
         // Determinar si es relevante
         const isPlanificada = planificadas.some(plan => {
           if (plan.carretera !== incidencia.carretera) return false;
+          
           const cleanMuni = (plan.municipio_inicio || '').split('(')[0].trim().toLowerCase();
+          const cleanMuniFin = (plan.municipio_fin || '').split('(')[0].trim().toLowerCase();
+          const planSentido = (plan.sentido || '').toLowerCase();
+          
           const mappedProvincia = geoMap[cleanMuni];
+          const mappedProvinciaFin = geoMap[cleanMuniFin];
+          
           const incProv = (incidencia.provincia || '').toLowerCase();
           const incCiudad = (incidencia.ciudad || '').toLowerCase();
           
-          if (mappedProvincia) {
-            return incProv.includes(mappedProvincia) || mappedProvincia.includes(incProv);
+          // Si sabemos la provincia por el mapa de la app
+          if (mappedProvincia || mappedProvinciaFin) {
+            return incProv.includes(mappedProvincia) || (mappedProvincia && mappedProvincia.includes(incProv)) ||
+                   incProv.includes(mappedProvinciaFin) || (mappedProvinciaFin && mappedProvinciaFin.includes(incProv)) ||
+                   planSentido.includes(incProv) || planSentido.includes(incCiudad);
           } else {
-            if (!cleanMuni || cleanMuni === 'n/a') return false;
-            return incCiudad.includes(cleanMuni) || cleanMuni.includes(incCiudad);
+            if ((!cleanMuni || cleanMuni === 'n/a') && (!cleanMuniFin || cleanMuniFin === 'n/a')) return false;
+            return incCiudad.includes(cleanMuni) || cleanMuni.includes(incCiudad) ||
+                   incCiudad.includes(cleanMuniFin) || cleanMuniFin.includes(incCiudad) ||
+                   planSentido.includes(incCiudad);
           }
         });
 

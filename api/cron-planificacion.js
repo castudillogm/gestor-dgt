@@ -145,24 +145,33 @@ export default async function handler(request, response) {
            
            let userRestricciones = restricciones;
            if (!isTodas) {
-               // Filtrar por coincidencias en el municipio/población O mapeando municipio -> provincia
+                // Filtrar por coincidencias en el municipio/población O mapeando municipio -> provincia
                userRestricciones = restricciones.filter(r => {
                    const muni = (r.municipio_inicio || '').toLowerCase();
+                   const muniFin = (r.municipio_fin || '').toLowerCase();
+                   const sentido = (r.sentido || '').toLowerCase();
                    
                    // Limpiamos el texto extra del excel (por ej. si dice "Las Rozas (Madrid)")
                    const cleanMuni = muni.split('(')[0].trim();
+                   const cleanMuniFin = muniFin.split('(')[0].trim();
                    
                    // 1. Buscamos la provincia en el diccionario a partir del municipio
                    const mappedProvincia = geoMap[cleanMuni] || '';
+                   const mappedProvinciaFin = geoMap[cleanMuniFin] || '';
 
-                   // 2. Verificamos si alguna provincia del usuario coincide con el mappedProvincia o con el texto bruto del municipio
+                   // 2. Verificamos si alguna provincia del usuario coincide
                    const hasProvincia = provincias.some(p => {
                        const pLow = p.toLowerCase();
-                       return muni.includes(pLow) || mappedProvincia === pLow;
+                       return muni.includes(pLow) || mappedProvincia === pLow ||
+                              muniFin.includes(pLow) || mappedProvinciaFin === pLow ||
+                              sentido.includes(pLow);
                    });
                    
-                   // 3. Verificamos si la ciudad especificada está en el municipio
-                   const hasCiudad = ciudades && ciudades.split(',').some(c => muni.includes(c.trim().toLowerCase()));
+                   // 3. Verificamos si la ciudad especificada está en el municipio o sentido
+                   const hasCiudad = ciudades && ciudades.split(',').some(c => {
+                       const cLow = c.trim().toLowerCase();
+                       return muni.includes(cLow) || muniFin.includes(cLow) || sentido.includes(cLow);
+                   });
                    
                    return hasProvincia || hasCiudad;
                });

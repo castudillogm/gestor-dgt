@@ -159,13 +159,48 @@ export const sendPlanningEmail = async (to, restricciones, isUpdated = false) =>
     ? `<span style="background-color: #ff9800; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; vertical-align: middle; margin-left: 10px;">ACTUALIZACIÓN</span>` 
     : "";
 
-  const htmlList = restricciones.map(r => `
-    <li style="margin-bottom: 10px;">
-      <strong>Día:</strong> ${r.fecha_texto} <br/>
-      <strong>Carretera:</strong> ${r.carretera} (Población: ${r.municipio_inicio || 'N/A'}) <br/>
-      <strong>Horario:</strong> ${r.duracion || 'Todo el día'} - Sentido: ${r.sentido || 'Ambos'}
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const monthMap = {
+    'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
+    'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11,
+    'ene': 0, 'feb': 1, 'mar': 2, 'abr': 3, 'may': 4, 'jun': 5, 'jul': 6, 'ago': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dic': 11
+  };
+
+  const isFutureOrToday = (fechaTexto) => {
+    if (!fechaTexto) return true;
+    const lower = fechaTexto.toLowerCase();
+    
+    const match = lower.match(/(\d{1,2})\s*(?:de)?\s*([a-z]+)/);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const monthIndex = monthMap[match[2]];
+      
+      if (monthIndex !== undefined) {
+        const dateToCompare = new Date(today.getFullYear(), monthIndex, day);
+        if (dateToCompare < today && (today.getMonth() - monthIndex > 6)) {
+           dateToCompare.setFullYear(today.getFullYear() + 1);
+        }
+        return dateToCompare >= today;
+      }
+    }
+    return true; 
+  };
+
+  const htmlList = restricciones.map(r => {
+    const esNueva = isFutureOrToday(r.fecha_texto);
+    const color = esNueva ? '#03A9EC' : '#1a1a2e';
+    const destName = r.municipio_fin ? ` a ${r.municipio_fin}` : '';
+    
+    return `
+    <li style="margin-bottom: 12px; color: ${color};">
+      <strong style="color: ${color};">Día:</strong> ${r.fecha_texto} <br/>
+      <strong>Carretera:</strong> ${r.carretera} (Tramo: ${r.municipio_inicio || 'N/A'}${destName}) <br/>
+      <strong>Horario:</strong> ${r.duracion || 'Todo el día'} - <strong>Sentido:</strong> ${r.sentido || 'Ambos'}
     </li>
-  `).join('');
+    `;
+  }).join('');
 
   const htmlContent = `
     <!DOCTYPE html>
